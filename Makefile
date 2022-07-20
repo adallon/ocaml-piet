@@ -1,6 +1,9 @@
 all:
 	dune build
 
+noerror:
+	dune build --profile release 
+
 clean:
 	rm -rf _build/
 
