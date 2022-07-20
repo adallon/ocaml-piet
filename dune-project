@@ -11,13 +11,13 @@
 
 (maintainers "A. Dallon")
 
-(license LICENSE)
+(license Copyright AD)
 
 (documentation https://github.com/adallon/ocaml-piet)
 
 (package
  (name ocaml_piet)
- (synopsis "A short synopsis")
+ (synopsis "Piet interpreter")
  (description "OCaml piet esoteric programming language implementation")
  (depends ocaml dune)
  (tags
