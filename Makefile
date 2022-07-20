@@ -8,7 +8,7 @@ clean:
 	rm -rf _build/
 
 test:
-	dune test
+	dune test --profile release 
 
 exec:
-	dune exec ocaml_piet
+	dune exec ocaml_piet --profile release
