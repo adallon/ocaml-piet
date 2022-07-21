@@ -167,6 +167,7 @@ let () =
   assert(roll (push 2 (push 3 test2)) = [2;5;-3;12])
 
 let inint x =
+  let () = print_string "?" in
   match read_int_opt () with
   | None -> x
   | Some(n) -> n::x
