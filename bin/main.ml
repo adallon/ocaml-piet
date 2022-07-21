@@ -1,5 +1,12 @@
+open Ocaml_piet.Instructions
 
 let _ =
+  let _ =
+    let x = Stack.get Stack.empty in
+    match x with
+    | Some(y),_ -> print_int y
+    | None,_ -> ()
+  in
   let map = Ocaml_piet.Codel_map.codel_map_example in
   print_string (Ocaml_piet.Codel_map.codel_map_to_string map);
   print_newline ();
