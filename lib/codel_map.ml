@@ -43,10 +43,15 @@ let codel_to_string = function
 
 type codel_map = codel array array
 
+
 let codel_map_to_string codel_map =
-  let line_to_string codel_line =
-    String.concat "" (Array.to_list (Array.map codel_to_string codel_line))
-  in String.concat "\n" (Array.to_list (Array.map line_to_string codel_map))
+  let indexesX = List.init (Array.length codel_map) (fun i -> i) in 
+  let indexesY = List.init (Array.length codel_map.(0)) (fun i -> i) in 
+  let get_line y = 
+    let l =
+      List.map (fun x -> codel_to_string codel_map.(x).(y)) indexesX 
+    in String.concat "." l
+  in String.concat "\n" (List.map get_line indexesY)
 
 let codel_map_example =
   let arr = Array.make 5 [||] in
