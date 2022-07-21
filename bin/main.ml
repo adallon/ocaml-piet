@@ -1,8 +1,8 @@
-open Ocaml_piet.Instructions
+open Ocaml_piet.Stack
 
 let _ =
   let _ =
-    let x = Stack.get Stack.empty in
+    let x = get empty in
     match x with
     | Some(y),_ -> print_int y
     | None,_ -> ()
