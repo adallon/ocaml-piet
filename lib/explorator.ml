@@ -9,6 +9,7 @@ let explorator state =
   let map,(cX,cY),machine = state in
   let dir  = Machine.get_direction machine in
   let hand = Machine.get_hand machine in
+  (*
   let color_block = Codel_map.get_codel_block map cX cY in
   let next_cases =
     let dir_and_hands = Direction.dir_hand_order dir hand in
@@ -30,11 +31,13 @@ let explorator state =
           then Some(d,h,(x,y))
           else get_next_coord t
         in aux_get_next (d,h,(x,y))
-  in match get_next_coord next_cases with
+  in 
+*)
+  match Codel_map.next_cases map dir hand (cX,cY) with
   | None -> None
-  | Some(d,h,(x,y)) -> 
+  | Some(d,h,bs,x,y) -> 
       let new_state = (map,(x,y),Machine.set d h machine)
-      in Some(new_state,List.length color_block)
+      in Some(new_state,bs)
 
 let interpreter map =
   let () = Util.print_endline "interpreter" in

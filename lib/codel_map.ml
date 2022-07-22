@@ -41,7 +41,28 @@ let codel_to_string = function
   | Black -> "N " (* as Noir or Night *)
   | Codel (h,l) -> String.concat "" [hue_to_string h ; lightness_to_string l]
 
+type memorized_data = int * ((int*int) option)
+type codel_map = 
+  (codel array array) *
+  (int option array array) *
+  int ref *
+  (int * Direction.direction * Direction.hand, memorized_data) Hashtbl.t
+
+  (*
+   *the codel array array represents the codel map
+   *the int option array array represents the block numbers
+   of the codels once it is set
+   *the int represents the current max block number
+   * the hashtable is used to memorize block info to avoid costly
+   * computings.
+   * It takes as input the block number, 
+   * the DP and CC and returns the blocksize 
+   * and the coordinate of the next point in this direction
+   * if there is one
+   *)
+
 let codel_transition map (x0,y0) (x1,y1) =
+  let map0,_,_,_ = map in
   let _ =
     Util.print_endline "Transition:";
     (* print_int x0; print_string ","; print_int y0 ; 
@@ -50,8 +71,8 @@ let codel_transition map (x0,y0) (x1,y1) =
     print_newline (); *)
   in
 
-  let c1 = map.(x0).(y0) in
-  let c2 = map.(x1).(y1) in
+  let c1 = map0.(x0).(y0) in
+  let c2 = map0.(x1).(y1) in
   (*
   let _ = print_endline (codel_to_string c1) in
   let _ = print_endline (codel_to_string c2) in
@@ -61,33 +82,39 @@ let codel_transition map (x0,y0) (x1,y1) =
   (* no transition with a non-colored block *)
   |Codel(h0,l0),Codel(h1,l1) -> hue_diff h0 h1, lightness_diff l0 l1
 
-type codel_map = codel array array
-
 let codel_black_white map x y = 
-  let maxX = Array.length map in
-  let maxY = Array.length map.(0) in
+  let map0,_,_,_ = map in
+  let maxX = Array.length map0 in
+  let maxY = Array.length map0.(0) in
   let is_not_black = 
-    x>=0 && x < maxX && y >= 0 && y < maxY && map.(x).(y) != Black
+    x>=0 && x < maxX && y >= 0 && y < maxY && map0.(x).(y) != Black
   in let is_white =
-    x>=0 && x < maxX && y >= 0 && y < maxY && map.(x).(y) = White
+    x>=0 && x < maxX && y >= 0 && y < maxY && map0.(x).(y) = White
   in is_not_black,is_white
 
 
 let codel_map_create nx ny =
-  let arr = Array.make nx [||] in
+  let arr_map   = Array.make nx [||] in
+  let arr_group = Array.make nx [||] in
   let rec aux = function
     | 0 -> ()
-    | n -> arr.(n-1) <- Array.make ny Black ; aux (n-1)
-  in let _ = aux nx in arr
+    | n -> 
+        begin 
+          arr_map.(n-1)   <- Array.make ny Black ; 
+          arr_group.(n-1) <- Array.make ny None ;
+          aux (n-1)
+        end
+  in let _ = aux nx in (arr_map,arr_group,ref 0,Hashtbl.create (nx*ny))
 
 let codel_map_to_string codel_map =
-  let indexesX = List.init (Array.length codel_map)     (fun i -> i) 
+  let map0,_,_,_ = codel_map in
+  let indexesX = List.init (Array.length map0)     (fun i -> i) 
   in 
-  let indexesY = List.init (Array.length codel_map.(0)) (fun i -> i) 
+  let indexesY = List.init (Array.length map0.(0)) (fun i -> i) 
   in 
   let get_line y = 
     let l =
-      List.map (fun x -> codel_to_string codel_map.(x).(y)) indexesX 
+      List.map (fun x -> codel_to_string map0.(x).(y)) indexesX 
     in String.concat "." l
   in String.concat "\n" (List.map get_line indexesY)
 
@@ -133,7 +160,8 @@ let png_to_map fpath =
  in let file_as_str = read_file [] ich
  (* in let _ = close_in ich *)
  in let img = ImagePNG.parsefile (ImageUtil.chunk_reader_of_string file_as_str)
- in let map = codel_map_create img.width img.height
+ in let (map,group,maxG,tab) = 
+   codel_map_create img.width img.height
  in let f x y r g b =
    let c = codel r g b in let _ = map.(x).(y) <- c in ()
  in let g x y = Image.read_rgb img x y (f x y) 
@@ -144,10 +172,11 @@ let png_to_map fpath =
    | 0 -> ()
    | n -> begin apply_g_x (n-1) img.height ; apply_g (n-1) end
  in let _ = apply_g img.width
- in map
+ in (map,group,maxG,tab)
 
 
 
+ (*
 let codel_map_size map = (Array.length map, Array.length map.(0))
 let codel_map_example =
   let arr = codel_map_create 5 5 in
@@ -167,8 +196,9 @@ let codel_map_example =
     arr.(1).(1) <- White;
     arr.(2).(0) <- test_codel
   in arr
+*)
 
-let get_codel_block map i j =
+let get_codel_block (map:codel array array) i j =
   let explored  = [(i,j)] in
 
   let add_if_not_in seen new_xplr a =
@@ -201,3 +231,62 @@ let get_codel_block map i j =
     | [] -> explored
     | exploring -> aux explored exploring
   in aux explored explored
+
+let next_cases map dir hand (cX,cY) =
+  let dir_and_hands = Direction.dir_hand_order dir hand in
+  let map0,group,maxG,tab = map in
+  let possibilities = 
+    match group.(cX).(cY) with
+    | Some(g) -> 
+      List.map (fun (d,h) -> (d,h,Hashtbl.find tab (g,d,h))) dir_and_hands
+    | None ->
+        let color_block = get_codel_block map0 cX cY in
+        let blocksize = List.length color_block in
+        let gVal = !maxG in
+        let _ =
+          let rec aux = function
+            | [] -> maxG := !maxG+1
+            | (x,y)::t ->
+                begin group.(x).(y) <- Some(gVal) ; aux t end
+          in aux color_block
+        in let to_map (d,h) =
+          let f_list = Direction.furthest color_block d in
+          let cc_dir = Direction.rotate_hand d h in
+          match Direction.furthest f_list cc_dir with
+          | [x1,y1] -> (d,h,Direction.next_point (x1,y1) d)
+          | _ -> assert(false) 
+          (* only one element at this point :
+           * we are at a border of an edge    *)
+        in let outside_points = List.map to_map dir_and_hands
+          (* points to go out of the block,
+           * with no consideration of the possibility of it.
+           * We examine now if they are inside the map,
+           * if they are black/white.
+           * Note that outside cases are handled as black *)
+        in let rec get_next_coord = function
+          | (d,h,(x,y)) ->
+              let not_black,white =
+                codel_black_white map x y in
+              if white
+              then get_next_coord (d,h,Direction.next_point (x,y) d)
+              else if not_black
+              then d,h,Some(x,y)
+              else d,h,None
+        in let next_points_computed =
+          List.map get_next_coord outside_points
+        in let rec hash_update = function
+          | [] -> ()
+          | (d,h,o)::t -> Hashtbl.add tab (gVal,d,h) (blocksize,o); hash_update t
+        in let _ = hash_update next_points_computed
+        in 
+        List.map (fun (d,h) -> (d,h, Hashtbl.find tab (gVal,d,h))) dir_and_hands
+    in let rec handle_possibilities = function
+      | [] -> None
+      | (_,_,(_,None))::t -> handle_possibilities t
+      | (d,h,(bs,Some(x,y)))::_ -> Some(d,h,bs,x,y)
+    in handle_possibilities possibilities
+
+
+                
+
+
