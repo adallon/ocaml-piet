@@ -1,2 +1,3 @@
 (library
- (name ocaml_piet))
+ (name ocaml_piet)
+ (libraries imagelib.unix))
