@@ -10,4 +10,4 @@ let map = Codel_map.png_to_map path;;
     (* Ocaml_piet.Codel_map.codel_map_example  *)
 (* print_string (Codel_map.codel_map_to_string map);*)
 print_newline ();
-Explorator.interpreter map;;
+Codel_map.interpreter map;;
