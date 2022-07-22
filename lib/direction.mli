@@ -1,6 +1,9 @@
 type direction
 type hand
 
+val direction_to_string : direction -> string 
+val hand_to_string : hand -> string
+
 val init_dir: direction
 val init_hand: hand
 

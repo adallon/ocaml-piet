@@ -11,3 +11,4 @@ val codel_map_example: codel_map
 
 val get_codel_block: codel_map -> int -> int -> (int*int) list
 
+val png_to_map : string -> codel_map

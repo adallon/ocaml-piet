@@ -35,7 +35,9 @@ let explorator state =
       in Some(new_state,d,h,List.length color_block)
 
 let interpreter map =
+  let () = Util.print_endline "interpreter" in
   let rec aux state =
+    let _ = Util.print_endline "interpreter: aux" in
     let (_,coord0,mach0) = state in 
     let trans_opt = explorator state in
     match trans_opt with

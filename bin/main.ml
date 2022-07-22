@@ -1,16 +1,9 @@
-open Ocaml_piet.Stack
+open Ocaml_piet
 
-let _ =
-  let _ =
-    let x = get empty in
-    match x with
-    | Some(y),_ -> print_int y
-    | None,_ -> ()
-  in
-  let map = Ocaml_piet.Codel_map.codel_map_example in
-  print_string (Ocaml_piet.Codel_map.codel_map_to_string map);
-  print_newline ();
-  print_string (Ocaml_piet.Util.coord_list_to_string (Ocaml_piet.Codel_map.get_codel_block map 2 2));
-  print_newline ();
-Ocaml_piet.Explorator.interpreter map
-;;
+let path = "/home/antoine/dépôts/perso/ocaml-piet/examples/Piet_hello.png"
+let map = Codel_map.png_to_map path;;
+    (* Ocaml_piet.Codel_map.codel_map_example  *)
+(* print_string (Codel_map.codel_map_to_string map);*)
+print_newline ();
+Explorator.interpreter map;;
+
