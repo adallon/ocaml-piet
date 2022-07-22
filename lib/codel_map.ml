@@ -41,17 +41,39 @@ let codel_to_string = function
   | Black -> "N " (* as Noir or Night *)
   | Codel (h,l) -> String.concat "" [hue_to_string h ; lightness_to_string l]
 
+let codel_transition map (x0,y0) (x1,y1) =
+  let c1 = map.(x0).(y0) in
+  let c2 = map.(x1).(y1) in
+  match c1,c2 with
+  |White,_|_,White|Black,_|_,Black -> assert(false)
+  (* no transition with a non-colored block *)
+  |Codel(h0,l0),Codel(h1,l1) -> hue_diff h0 h1, lightness_diff l0 l1
+
 type codel_map = codel array array
+
+let codel_black_white map x y = 
+  let maxX = Array.length map in
+  let maxY = Array.length map.(0) in
+  let is_not_black = 
+    x>=0 && x < maxX && y >= 0 && y < maxY && map.(x).(y) != Black
+  in let is_white =
+    x>=0 && x < maxX && y >= 0 && y < maxY && map.(x).(y) = White
+  in is_not_black,is_white
+
 
 
 let codel_map_to_string codel_map =
-  let indexesX = List.init (Array.length codel_map) (fun i -> i) in 
-  let indexesY = List.init (Array.length codel_map.(0)) (fun i -> i) in 
+  let indexesX = List.init (Array.length codel_map)     (fun i -> i) 
+  in 
+  let indexesY = List.init (Array.length codel_map.(0)) (fun i -> i) 
+  in 
   let get_line y = 
     let l =
       List.map (fun x -> codel_to_string codel_map.(x).(y)) indexesX 
     in String.concat "." l
   in String.concat "\n" (List.map get_line indexesY)
+
+let codel_map_size map = (Array.length map, Array.length map.(0))
 
 let codel_map_example =
   let arr = Array.make 5 [||] in
@@ -72,7 +94,7 @@ let codel_map_example =
     arr.(0).(0) <- test_codel
   in arr
 
-let get_color_block map i j =
+let get_codel_block map i j =
   let explored  = [(i,j)] in
 
   let add_if_not_in seen new_xplr a =

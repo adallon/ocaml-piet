@@ -7,4 +7,5 @@ type instr =
   | InInt     | InChar  (* io : input  *)  
   | OutInt    | OutChar (* io : output *)
 
+let transition th tl = assert(false) (* TODO *)
 

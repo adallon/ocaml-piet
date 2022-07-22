@@ -7,4 +7,4 @@ type instr =
   | InInt     | InChar  (* io : input  *)  
   | OutInt    | OutChar (* io : output *)
 
-
+val transition : int -> int -> instr
