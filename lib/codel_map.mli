@@ -8,5 +8,5 @@ val next_cases: codel_map -> Direction.direction -> Direction.hand -> int*int ->
 
 val codel_map_to_string: codel_map -> string
 
-val interpreter: Codel_map.codel_map -> unit
+val interpreter: codel_map -> unit
 val png_to_map : string -> codel_map

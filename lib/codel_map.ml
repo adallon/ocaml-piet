@@ -293,7 +293,7 @@ let explorator state =
   let map,(cX,cY),machine = state in
   let dir  = Machine.get_direction machine in
   let hand = Machine.get_hand machine in
-  match Codel_map.next_cases map dir hand (cX,cY) with
+  match next_cases map dir hand (cX,cY) with
   | None -> None
   | Some(d,h,bs,x,y) -> 
       let new_state = (map,(x,y),Machine.set d h machine)
@@ -310,7 +310,7 @@ let interpreter map =
     | Some(state1,blocksize) ->
         let (_,coord1,mach1) = state1 in
         let th,tl = 
-          Codel_map.codel_transition map coord0 coord1 
+          codel_transition map coord0 coord1 
         in let inst  = Instructions.transition th tl
         in let mach2 = Machine.next_state mach1 blocksize inst
         in aux (map,coord1,mach2)
