@@ -1,14 +1,14 @@
 all:
-	dune build --profile release
+	dune build 
 
-error:
-	dune build
+noerror:
+	dune build --profile release
 
 clean:
 	rm -rf _build/
 
 test:
-	dune test --profile release 
+	dune test
 
 exec:
-	dune exec ocaml_piet --profile release
+	dune exec ocaml_piet

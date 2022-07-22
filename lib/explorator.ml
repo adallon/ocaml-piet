@@ -1,5 +1,7 @@
+(*
 type coord = int * int
 type state = Codel_map.codel_map * coord * Machine.t
+*)
 
 let init_state map = (map,(0,0),Machine.init_machine)
 
@@ -32,17 +34,17 @@ let explorator state =
   | None -> None
   | Some(d,h,(x,y)) -> 
       let new_state = (map,(x,y),Machine.set d h machine)
-      in Some(new_state,d,h,List.length color_block)
+      in Some(new_state,List.length color_block)
 
 let interpreter map =
   let () = Util.print_endline "interpreter" in
   let rec aux state =
     let _ = Util.print_endline "interpreter: aux" in
-    let (_,coord0,mach0) = state in 
+    let (_,coord0,_) = state in 
     let trans_opt = explorator state in
     match trans_opt with
     | None -> print_string "\nEnd of execution\n"
-    | Some(state1,d,h,blocksize) ->
+    | Some(state1,blocksize) ->
         let (_,coord1,mach1) = state1 in
         let th,tl = 
           Codel_map.codel_transition map coord0 coord1 

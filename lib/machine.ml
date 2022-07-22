@@ -5,9 +5,9 @@ type t = Stack.t * Direction.direction * Direction.hand
 
 let init_machine = Stack.empty,Direction.init_dir,Direction.init_hand
 
-let get_direction ((a,b,c):t) = b
-let get_hand      ((a,b,c):t) = c
-let set d h ((a,b,c):t) = a,d,h
+let get_direction ((_,b,_):t) = b
+let get_hand      ((_,_,c):t) = c
+let set d h ((a,_,_):t) = a,d,h
 
 let next_state machine prev_blocksize =
   
