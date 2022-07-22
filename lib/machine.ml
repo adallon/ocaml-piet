@@ -11,6 +11,7 @@ let set d h ((a,b,c):t) = a,d,h
 
 let next_state machine prev_blocksize = 
   let (st,dp,cc) = machine in function
+  | NoInst -> machine
   | Push -> (Stack.push prev_blocksize st,dp,cc)
   | Pop  -> (Stack.pop st,dp,cc)
   | Add  -> (Stack.add st,dp,cc)

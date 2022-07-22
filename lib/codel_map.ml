@@ -91,7 +91,11 @@ let codel_map_example =
     arr.(4).(2) <- test_codel ;
     arr.(4).(3) <- test_codel ;
     arr.(4).(4) <- test_codel ;
-    arr.(0).(0) <- test_codel
+    arr.(0).(0) <- test_codel ;
+    arr.(1).(0) <- White;
+    arr.(0).(1) <- White;
+    arr.(1).(1) <- White;
+    arr.(2).(0) <- test_codel
   in arr
 
 let get_codel_block map i j =

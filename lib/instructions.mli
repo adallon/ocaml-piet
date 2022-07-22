@@ -1,5 +1,5 @@
 type instr = 
-  | Push      | Pop (* basic stack *)   
+  | NoInst    | Push      | Pop (* basic stack *)   
   | Add       | Substract | Multiply | Divide    | Mod (* Basic arithmetic *)
   | Not       | Greater (* Logic  *)    
   | Pointer   | Switch  (* Arrows *)
