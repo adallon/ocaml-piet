@@ -40,6 +40,9 @@ let next_point_chooser_dir (x,y) dir = function
 type t = Stack.t * direction * chooser
 (* Stack, Direction Pointer DP, Codel Chooser CC *)
 
+let get_direction (a,b,c) = b
+let get_chooser   (a,b,c) = c
+
 let next_state machine prev_blocksize = 
   let (st,dp,cc) = machine in function
   | Push -> (Stack.push prev_blocksize st,dp,cc)
