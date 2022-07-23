@@ -41,7 +41,7 @@ let codel_to_string = function
   | Black -> "N " (* as Noir or Night *)
   | Codel (h,l) -> String.concat "" [hue_to_string h ; lightness_to_string l]
 
-type memorized_data = int * ((int*int) option)
+type memorized_data = bool * int * ((int*int) option)
 type codel_map = 
   (codel array array) *
   (int option array array) *
@@ -235,11 +235,44 @@ let get_codel_block (map:codel array array) i j =
 let next_cases map dir hand (cX,cY) =
   let dir_and_hands = Direction.dir_hand_order dir hand in
   let map0,group,maxG,tab = map in
-  let possibilities = 
-    match group.(cX).(cY) with
-    | Some(g) -> 
+
+  let get_next_coord wh (d,h,(x,y)) =
+    let rec aux (x0,y0) wh (d,h,(x,y)) =
+      let not_black,white = codel_black_white map x y in
+      if white
+      (* the codel is white: we continue until we find a border,
+       * a colored block or a black codel *)
+      then aux (x0,y0) true (d,h,Direction.next_point (x,y) d)
+      else if not_black
+      (* it is neither white nor black: it is a colored block *)
+      then wh,d,h,Some(x,y)
+      else (* it is black or a border *)
+        if wh = false ||(x0=x && y0 = y)
+        (* We were never at a white block, 
+         * or the direction is completely obstructed.
+         *)
+        then wh,d,h,None 
+        else true,d,h,Some(x0,y0)
+    in aux (x,y) wh (d,h,(x,y)) 
+  
+  in let rec hash_update gVal blocksize = function
+          | [] -> ()
+          | (wh,d,h,o)::t -> Hashtbl.add tab (gVal,d,h) (wh,blocksize,o); hash_update gVal blocksize t
+  in let possibilities = 
+    match map0.(cX).(cY),group.(cX).(cY) with
+    |     _,Some(g) -> 
       List.map (fun (d,h) -> (d,h,Hashtbl.find tab (g,d,h))) dir_and_hands
-    | None ->
+    | White,None ->
+        let gVal = !maxG in
+        let    _ = maxG:=!maxG+1 ; group.(cX).(cY) <- Some(gVal) in
+        let outside_points = 
+          List.map (fun (d,h) -> (d,h,Direction.next_point (cX,cY) d)) dir_and_hands 
+        in let next_points_computed =
+          List.map (get_next_coord true) outside_points
+        in let _ = hash_update gVal 0 next_points_computed 
+        in
+        List.map (fun (d,h) -> (d,h, Hashtbl.find tab (gVal,d,h))) dir_and_hands
+    | _,None ->
         let color_block = get_codel_block map0 cX cY in
         let blocksize = List.length color_block in
         let gVal = !maxG in
@@ -263,27 +296,15 @@ let next_cases map dir hand (cX,cY) =
            * We examine now if they are inside the map,
            * if they are black/white.
            * Note that outside cases are handled as black *)
-        in let rec get_next_coord = function
-          | (d,h,(x,y)) ->
-              let not_black,white =
-                codel_black_white map x y in
-              if white
-              then get_next_coord (d,h,Direction.next_point (x,y) d)
-              else if not_black
-              then d,h,Some(x,y)
-              else d,h,None
         in let next_points_computed =
-          List.map get_next_coord outside_points
-        in let rec hash_update = function
-          | [] -> ()
-          | (d,h,o)::t -> Hashtbl.add tab (gVal,d,h) (blocksize,o); hash_update t
-        in let _ = hash_update next_points_computed
+          List.map (get_next_coord false) outside_points
+        in let _ = hash_update gVal blocksize next_points_computed
         in 
         List.map (fun (d,h) -> (d,h, Hashtbl.find tab (gVal,d,h))) dir_and_hands
     in let rec handle_possibilities = function
       | [] -> None
-      | (_,_,(_,None))::t -> handle_possibilities t
-      | (d,h,(bs,Some(x,y)))::_ -> Some(d,h,bs,x,y)
+      | (_,_,(_,_,None))::t -> handle_possibilities t
+      | (d,h,(wh,bs,Some(x,y)))::_ -> Some(wh,d,h,bs,x,y)
     in handle_possibilities possibilities
 
 
@@ -295,9 +316,9 @@ let explorator state =
   let hand = Machine.get_hand machine in
   match next_cases map dir hand (cX,cY) with
   | None -> None
-  | Some(d,h,bs,x,y) -> 
+  | Some(wh,d,h,bs,x,y) -> 
       let new_state = (map,(x,y),Machine.set d h machine)
-      in Some(new_state,bs)
+      in Some(new_state,bs,wh)
 
 let interpreter map =
   let () = Util.print_endline "interpreter" in
@@ -307,10 +328,11 @@ let interpreter map =
     let trans_opt = explorator state in
     match trans_opt with
     | None -> print_string "\nEnd of execution\n"
-    | Some(state1,blocksize) ->
+    | Some(state1,blocksize,wh) ->
         let (_,coord1,mach1) = state1 in
-        let th,tl = 
-          codel_transition map coord0 coord1 
+        let th,tl =
+          if wh then (0,0)
+          else codel_transition map coord0 coord1 
         in let inst  = Instructions.transition th tl
         in let mach2 = Machine.next_state mach1 blocksize inst
         in aux (map,coord1,mach2)
