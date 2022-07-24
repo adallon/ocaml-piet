@@ -59,19 +59,10 @@ type codel_map =
    * See hashmemory.ml
    *)
 
-let print_coord_trace (x,y) =
-  begin
-    Util.print_string 0 "(";
-    Util.print_int 0 x ;
-    Util.print_string 0 ",";
-    Util.print_int 0 y ;
-    Util.print_string 0 ")"
-  end
-
-let codel_transition map (x0,y0) (x1,y1) =
+let codel_transition map p0 p1 =
   let map0,_,_,_ = map in
-  let c1 = map0.(x0).(y0) in
-  let c2 = map0.(x1).(y1) in
+  let c1 = map0.(Geometry.x p0).(Geometry.y p0) in
+  let c2 = map0.(Geometry.x p1).(Geometry.y p1) in
   let _ = assert(c1 != c2) in 
   (* c1 != c2 as we do not call the transition function
     * when we go through a white codel *)
@@ -79,11 +70,11 @@ let codel_transition map (x0,y0) (x1,y1) =
   let c2_string = codel_to_string c2 in
   let _ =
     Util.print_newline 0 ();
-    print_coord_trace (x0,y0);
+    Geometry.print_coord_trace p0;
     Util.print_string 0 ":";
     Util.print_string 0 c1_string;
     Util.print_string 0 " -> ";
-    print_coord_trace (x1,y1);
+    Geometry.print_coord_trace p1;
     Util.print_string 0 ":";
     Util.print_string 0 c2_string;
     Util.print_string 0 " ";
@@ -214,34 +205,32 @@ let codel_map_example =
   in arr
 *)
 
-let get_codel_block map0 x y =
+let get_codel_block map0 (p:Geometry.coord) =
   let _ =
     Util.print_endline 2 "    Computing color block"
   in
   let (map,group,_,_) = map0 in 
+  let x,y = Geometry.x p,Geometry.y p in
   let _ = assert(group.(x).(y) = None) in
   let codel = map.(x).(y) in
   let xMax = Array.length map in
   let yMax = Array.length map.(0) in
   let rec line res i = function
     | 0 -> res
-    | j -> if (codel = map.(i).(j-1)) && (group.(i).(j-1) = None) && (i != x || j-1!= y) 
-           then line ((i,j-1)::res) i (j-1)
+    | j -> 
+        if (codel = map.(i).(j-1)) 
+        && (group.(i).(j-1) = None) && 
+        (i != x || j-1!= y) 
+           then line ((Geometry.to_coord (i,j-1))::res) i (j-1)
            else line res i (j-1)
   in let rec all_vals res = function
     | 0 -> res
     | i -> all_vals (line res (i-1) yMax) (i-1) 
-  in let candidates = all_vals [] xMax in
-  let rec is_close (x,y) = function
-    | [] -> false
-    | (x1,y1)::t -> 
-        (abs(x1-x) < 2 &&  y1 = y) || 
-        (abs(y1-y) < 2 &&  x1 = x) ||
-        (is_close (x,y) t) 
+  in let candidates = all_vals [] xMax 
   in let rec find_close new_found remain_l target_l = function
     | [] -> new_found,remain_l
     | x::t -> 
-        if is_close x target_l 
+        if Geometry.is_close x target_l 
         then find_close (x::new_found) remain_l target_l t
         else find_close new_found (x::remain_l) target_l t
 
@@ -251,10 +240,10 @@ let get_codel_block map0 x y =
     | [] ->  target
     | _ -> until_end remain_l (List.rev_append new_found target)
       
-  in let l = until_end candidates [(x,y)]
+  in let l = until_end candidates [p]
   in let _ =
     Util.print_string 2 "      Found: ";
-    Util.print_endline 2 (Util.coord_list_to_string l);
+    Util.print_endline 2 (Geometry.coord_list_to_string l);
   in l
   (*
   let explored  = [(i,j)] in
@@ -291,42 +280,44 @@ let get_codel_block map0 x y =
   in aux explored explored
   *)
 
-let next_cases (map:codel_map) dir hand (cX,cY) =
-  let dir_and_hands = Direction.dir_hand_order dir hand in
+let next_cases (map:codel_map) dir hand cur_p =
+  let dir_and_hands = Geometry.dir_hand_order dir hand in
   let map0,group,maxG,tab = map in
 
-  let get_next_coord wh d (x,y) =
-    let rec aux (x0,y0) wh (x,y) =
-      let not_black,white = codel_black_white map x y in
+  let get_next_coord wh d p =
+    let rec aux p0 wh p =
+      let px,py = (Geometry.x p,Geometry.y p) in
+      let not_black,white = codel_black_white map px py in
       if white
       (* the codel is white: we continue until we find a border,
        * a colored block or a black codel *)
-      then aux (x0,y0) true (Direction.next_point (x,y) d)
+      then aux p0 true (Geometry.next_point p d)
       else if not_black
       (* it is neither white nor black: it is a colored block *)
-      then wh,Some(x,y)
+      then wh,Some(p)
       else (* it is black or a border *)
-        if wh = false ||(x0=x && y0 = y)
+        if wh = false ||(p0 = p)
         (* We were never at a white block, 
          * or the direction is completely obstructed.
          *)
         then wh,None 
-        else true,Some(x0,y0)
-    in aux (x,y) wh (x,y) 
+        else true,Some(p0)
+    in aux p wh p 
   
   in let get_possibility (d,h) = 
     let _ =
       Util.print_string 1 "  Current direction ";
-      Util.print_endline 1 (Direction.direction_to_string d); 
+      Util.print_endline 1 (Geometry.direction_to_string d); 
       Util.print_string 1 "  Current hand ";
-      Util.print_endline 1 (Direction.hand_to_string h); 
+      Util.print_endline 1 (Geometry.hand_to_string h); 
+    in let cX,cY = Geometry.x cur_p,Geometry.y cur_p
     in match map0.(cX).(cY),group.(cX).(cY) with
     | White,Some(_) ->
         let _ =
           Util.print_endline 1 "  We are at a white codel";
           Util.print_endline 1 "    (Seen before)";
         in let wh,next_p = 
-          get_next_coord true d (Direction.next_point (cX,cY) d)
+          get_next_coord true d (Geometry.next_point cur_p d)
         in (wh,0,next_p)
     | White,None ->
         let _ =
@@ -336,7 +327,7 @@ let next_cases (map:codel_map) dir hand (cX,cY) =
         let gVal = !maxG in
         let    _ = maxG:=!maxG+1 ; group.(cX).(cY) <- Some(gVal) in
         let wh,next_p =
-          get_next_coord true d (Direction.next_point (cX,cY) d)
+          get_next_coord true d (Geometry.next_point cur_p d)
         (* in let _ = Hashtbl.add tab (gVal,d,h) (wh,0,next_p) *)
         in (wh,0,next_p)
         (* = Hashtbl.find tab (g,d,h) *)
@@ -346,27 +337,29 @@ let next_cases (map:codel_map) dir hand (cX,cY) =
           Util.print_endline 1 "  We are at a color codel";
           Util.print_endline 1 "    (Color block seen before)";
         in let size,corner = Hashmemory.get_corner tab g d h
-        in let wh,next_p = get_next_coord false d (Direction.next_point corner d)
+        in let wh,next_p = 
+          get_next_coord false d (Geometry.next_point corner d)
         in (wh,size,next_p)
     | _,None ->
         let _ =
           Util.print_endline 1 "  We are at a color codel";
           Util.print_endline 1 "    (Color block not seen yet)";
         in
-        let color_block = get_codel_block map cX cY in
+        let color_block = get_codel_block map cur_p in
         let blocksize = List.length color_block in
         let gVal = !maxG in
         let _ =
           let rec aux = function
             | [] -> maxG := !maxG+1
-            | (x,y)::t ->
+            | p::t ->
+                let x,y = Geometry.x p,Geometry.y p in
                 begin group.(x).(y) <- Some(gVal) ; aux t end
           in aux color_block
         in 
         let _ = Hashmemory.add_group tab gVal color_block blocksize in
         let size,corner = Hashmemory.get_corner tab gVal d h in
         let _ = assert(size = blocksize) in
-        let (wh,next_p) = get_next_coord false d (Direction.next_point corner d)
+        let (wh,next_p) = get_next_coord false d (Geometry.next_point corner d)
         in (wh,size,next_p)
 
     in let rec find_direction = function
@@ -378,9 +371,9 @@ let next_cases (map:codel_map) dir hand (cX,cY) =
       | (d,h)::t -> 
           let _ =
             Util.print_string 1 " Trying with direction ";
-            Util.print_string 1 (Direction.direction_to_string d); 
+            Util.print_string 1 (Geometry.direction_to_string d); 
             Util.print_string 1 " and hand ";
-            Util.print_endline 1 (Direction.hand_to_string h); 
+            Util.print_endline 1 (Geometry.hand_to_string h); 
             (*
           in let _ = 
             if Util.get_step_by_step ()
@@ -388,10 +381,10 @@ let next_cases (map:codel_map) dir hand (cX,cY) =
             else ()
             *)
           in begin match get_possibility (d,h) with
-          | (wh,bs,Some(x,y)) ->
+          | (wh,bs,Some(p)) ->
             let _ =
               Util.print_endline 1 "  Direction accepted";
-            in Some(wh,d,h,bs,x,y)
+            in Some(wh,d,h,bs,p)
           | (_,_,None) -> 
             let _ =
               Util.print_endline 1 "  Direction rejected";
@@ -400,16 +393,16 @@ let next_cases (map:codel_map) dir hand (cX,cY) =
     in find_direction dir_and_hands
 
 
-let init_state map = (map,(0,0),Machine.init_machine)
+let init_state map = (map,Geometry.to_coord (0,0),Machine.init_machine)
 
 let explorator state =
-  let map,(cX,cY),machine = state in
+  let map,cur_p,machine = state in
   let dir  = Machine.get_direction machine in
   let hand = Machine.get_hand machine in
-  match next_cases map dir hand (cX,cY) with
+  match next_cases map dir hand cur_p with
   | None -> None
-  | Some(wh,d,h,bs,x,y) -> 
-      let new_state = (map,(x,y),Machine.set d h machine)
+  | Some(wh,d,h,bs,p) -> 
+      let new_state = (map,p,Machine.set d h machine)
       in let _ = 
         if Util.get_step_by_step ()
         then let _ = print_string ">"; read_line () in ()

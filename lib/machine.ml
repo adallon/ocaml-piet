@@ -256,10 +256,10 @@ module Stack : Stack_type =
 end  
 
 
-type t = Stack.t * Direction.direction * Direction.hand
-(* Stack, Direction Pointer DP, Codel Chooser CC *)
+type t = Stack.t * Geometry.direction * Geometry.hand
+(* Stack, Geometry Pointer DP, Codel Chooser CC *)
 
-let init_machine = Stack.empty,Direction.init_dir,Direction.init_hand
+let init_machine = Stack.empty,Geometry.init_dir,Geometry.init_hand
 
 let get_direction ((_,b,_):t) = b
 let get_hand      ((_,_,c):t) = c
@@ -270,9 +270,9 @@ let next_state machine prev_blocksize inst =
   let (st,dp,cc) = machine in 
   let print_DPCC dp cc =
     begin
-    Util.print_string 0 (Direction.direction_to_string dp ); 
+    Util.print_string 0 (Geometry.direction_to_string dp ); 
     Util.print_string 0 ","; 
-    Util.print_string 0 (Direction.hand_to_string cc); 
+    Util.print_string 0 (Geometry.hand_to_string cc); 
     Util.print_endline 0 "" 
     end
   in let _ = print_DPCC dp cc
@@ -305,7 +305,7 @@ let next_state machine prev_blocksize inst =
             print_DPCC dp cc;
           in (st,dp,cc)
       | Some(n) -> 
-          let ndp = Direction.rotate dp n in
+          let ndp = Geometry.rotate dp n in
           let _ = 
             Util.print_string 0 "Pointer -> " ;
             print_DPCC ndp cc;
@@ -323,7 +323,7 @@ let next_state machine prev_blocksize inst =
           let ncc = 
             if n mod 2 = 0 
             then cc 
-            else Direction.hand_switch cc
+            else Geometry.hand_switch cc
           in
           let _ = 
             Util.print_string 0 "Switch -> " ;

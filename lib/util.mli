@@ -1,5 +1,3 @@
-type coord = int * int
-val coord_list_to_string : coord list -> string
 
 val set_steps : bool -> unit
 val set_verb_level : int -> unit

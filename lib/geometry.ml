@@ -1,3 +1,33 @@
+type coord = int * int
+
+let coord_list_to_string l =
+  let coord_to_string (i,j) = 
+    String.concat "" ["(";string_of_int i;",";string_of_int j;")"]
+  in String.concat ";" (List.map coord_to_string l)
+
+let to_coord (x,y) = (x,y)
+let x (a,_) = a
+let y (_,b) = b
+
+let print_coord_trace (x,y) =
+  begin
+    Util.print_string 0 "(";
+    Util.print_int 0 x ;
+    Util.print_string 0 ",";
+    Util.print_int 0 y ;
+    Util.print_string 0 ")"
+  end
+
+let rec is_close (x,y) = function
+  | [] -> false
+  | (x1,y1)::t -> 
+      (abs(x1-x) < 2 &&  y1 = y) || 
+      (abs(y1-y) < 2 &&  x1 = x) ||
+      (is_close (x,y) t) 
+
+
+
+
 type direction = North | South | West | East
 
 let direction_to_string = function

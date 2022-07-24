@@ -1,7 +1,7 @@
 type memorized_data = 
-  Util.coord list (* list of codel coordinates of the group *)
+  Geometry.coord list (* list of codel coordinates of the group *)
   * int (* size of the list *)
-  * (Direction.direction, Util.coord * Util.coord ) Hashtbl.t 
+  * (Geometry.direction, Geometry.coord * Geometry.coord ) Hashtbl.t 
   (* direction, left corner, right corner *)
 
 type t = (int , memorized_data) Hashtbl.t
@@ -21,15 +21,15 @@ let get_corner tab g d h =
     then
       let (left,right) = Hashtbl.find corner_tab d in 
       match h with
-      | Direction.Left  -> size,left
-      | Direction.Right -> size,right
+      | Geometry.Left  -> size,left
+      | Geometry.Right -> size,right
     else
-      let edge = Direction.furthest block d in
-      let left_dir  = Direction.rotate d (-1) in
-      let right_dir = Direction.rotate d  1   in
+      let edge = Geometry.furthest block d in
+      let left_dir  = Geometry.rotate d (-1) in
+      let right_dir = Geometry.rotate d  1   in
       let (left_point,right_point) = 
-        let l = Direction.furthest edge left_dir  in
-        let r = Direction.furthest edge right_dir in
+        let l = Geometry.furthest edge left_dir  in
+        let r = Geometry.furthest edge right_dir in
         match l,r with
             | [coord_l],[coord_r] -> coord_l,coord_r
             | _,_ -> assert(false) 
