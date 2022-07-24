@@ -1,10 +1,11 @@
-type coord
-val coord_list_to_string : coord list -> string
-val to_coord : int * int -> coord
-val x : coord -> int
-val y : coord -> int
-val print_coord_trace: coord -> unit
-val is_close: coord -> coord list -> bool
+module Point : sig
+  type t
+  val to_point : int * int -> t
+  val x : t -> int
+  val y : t -> int
+  val is_close: t -> t list -> bool
+  val to_string: t -> string
+end
 
 type direction
 type hand = Left | Right
@@ -17,9 +18,9 @@ val init_hand: hand
 
 val hand_switch: hand -> hand
 val rotate: direction -> int -> direction
-val furthest : coord list -> direction -> coord list
+val furthest : Point.t list -> direction -> Point.t list
 
-val next_point: coord -> direction -> coord
+val next_point: Point.t -> direction -> Point.t
 val dir_hand_order: direction -> hand -> (direction*hand) list
 
 
