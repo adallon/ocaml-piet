@@ -37,9 +37,9 @@ let hue_diff a b =
 type codel = White | Black | Codel of hue * lightness
 
 let codel_to_string = function
-  | White -> "W "
-  | Black -> "N " (* as Noir or Night *)
-  | Codel (h,l) -> String.concat "" [hue_to_string h ; lightness_to_string l]
+  | White -> " W"
+  | Black -> " N" (* as Noir or Night *)
+  | Codel (h,l) -> String.concat "" [lightness_to_string l ; hue_to_string h]
 
 type memorized_data = bool * int * ((int*int) option)
 type codel_map = 
@@ -61,22 +61,37 @@ type codel_map =
    * if there is one
    *)
 
+let print_coord_trace (x,y) =
+  begin
+    Util.print_string 0 "(";
+    Util.print_int 0 x ;
+    Util.print_string 0 ",";
+    Util.print_int 0 y ;
+    Util.print_string 0 ")"
+  end
+
 let codel_transition map (x0,y0) (x1,y1) =
   let map0,_,_,_ = map in
-  let _ =
-    Util.print_endline "Transition:";
-    (* print_int x0; print_string ","; print_int y0 ; 
-    print_string " -> ";
-    print_int x1; print_string ","; print_int y1 ; 
-    print_newline (); *)
-  in
-
   let c1 = map0.(x0).(y0) in
   let c2 = map0.(x1).(y1) in
-  (*
-  let _ = print_endline (codel_to_string c1) in
-  let _ = print_endline (codel_to_string c2) in
-  *)
+  let c1_string = codel_to_string c1 in
+  let c2_string = codel_to_string c2 in
+  let _ =
+    Util.print_newline 0 ();
+    print_coord_trace (x0,y0);
+    Util.print_string 0 ":";
+    Util.print_string 0 c1_string;
+    Util.print_string 0 " -> ";
+    print_coord_trace (x1,y1);
+    Util.print_string 0 ":";
+    Util.print_string 0 c2_string;
+    Util.print_string 0 " ";
+    (* Util.print_newline 0 (); *)
+    (* next printing is the transition of the machine.
+     * See function next_state in machine.ml
+     * No endline necessary.
+     *)
+  in
   match c1,c2 with
   |White,_|_,White|Black,_|_,Black -> assert(false)
   (* no transition with a non-colored block *)
@@ -318,16 +333,18 @@ let explorator state =
   | None -> None
   | Some(wh,d,h,bs,x,y) -> 
       let new_state = (map,(x,y),Machine.set d h machine)
+      in let _ = 
+        if Util.step_by_step 
+        then let _ = print_string ">"; read_line () in ()
+        else ()
       in Some(new_state,bs,wh)
 
 let interpreter map =
-  let () = Util.print_endline "interpreter" in
   let rec aux state =
-    let _ = Util.print_endline "interpreter: aux" in
     let (_,coord0,_) = state in 
     let trans_opt = explorator state in
     match trans_opt with
-    | None -> print_string "\nEnd of execution\n"
+    | None -> Util.print_string 0 "\nEnd of execution\n"
     | Some(state1,blocksize,wh) ->
         let (_,coord1,mach1) = state1 in
         let th,tl =

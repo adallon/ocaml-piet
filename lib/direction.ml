@@ -9,8 +9,8 @@ let direction_to_string = function
 type hand      = Left  | Right
 
 let hand_to_string = function
-  | Left  -> "L"
-  | Right -> "R"
+  | Left  -> "l"
+  | Right -> "r"
 
 let init_dir  = East
 let init_hand = Left

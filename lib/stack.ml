@@ -1,6 +1,8 @@
 type t = int list
 
-let to_string x = String.concat ";" (List.map string_of_int x)
+let to_string x = 
+  let main = String.concat ";" (List.map string_of_int x)
+  in String.concat "" ["[";main;"]"]
 
 let empty = []
 
@@ -211,7 +213,7 @@ let outint = function
 let outchar = function
   | x::t -> 
       if 0 <= x && x < 256 then 
-        let _ = print_char (Char.chr x) in t
+        let _ = print_char (Char.chr x) ; Util.print_newline 0 () in t
       else x::t
   | [] -> []
 
