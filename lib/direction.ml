@@ -1,16 +1,16 @@
 type direction = North | South | West | East
 
 let direction_to_string = function
-  | North -> "N"
-  | East  -> "E"
-  | South -> "S"
-  | West  -> "W"
+  | North -> "North"
+  | East  -> "East"
+  | South -> "South"
+  | West  -> "West"
 
 type hand      = Left  | Right
 
 let hand_to_string = function
-  | Left  -> "l"
-  | Right -> "r"
+  | Left  -> "left"
+  | Right -> "right"
 
 let init_dir  = East
 let init_hand = Left
