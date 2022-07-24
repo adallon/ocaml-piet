@@ -28,9 +28,11 @@ let direction_to_int = function
   | South -> 2
   | West  -> 3
 
+  (*
 let hand_to_int = function
   | Left  -> -1
   | Right -> 1
+*)
 
 let rotate dir n =
   let k = direction_to_int dir in
@@ -68,8 +70,10 @@ let hand_switch = function
   | Left  -> Right
   | Right -> Left
 
+  (*
 let rotate_hand dir hand = 
   rotate dir (hand_to_int hand)
+  *)
 
 let next_point (x,y)  = function
   | North -> (x,y-1)

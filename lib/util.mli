@@ -1,4 +1,5 @@
-val coord_list_to_string : (int*int) list -> string
+type coord = int * int
+val coord_list_to_string : coord list -> string
 
 val print_string: int -> string -> unit
 val print_int: int -> int -> unit
