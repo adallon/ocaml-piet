@@ -96,7 +96,3 @@ module Direction = struct
     | [] -> assert(false) (* no empty codel block *)
     | a::t -> aux [a] a dir t
 end
-
-
-
-

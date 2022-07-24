@@ -404,9 +404,6 @@ let next_cases (map:codel_map) dir hand cur_p =
        dir2,hand0; dir2,hand1; dir3,hand1; dir3,hand0]
     in find_direction dir_and_hands
 
-
-let init_state map = (map,Point.to_point (0,0),Machine.init_machine)
-
 let explorator state =
   let map,cur_p,machine = state in
   let dir  = Machine.get_direction machine in
@@ -420,6 +417,8 @@ let explorator state =
         then let _ = print_string ">"; read_line () in ()
         else () 
       in Some(new_state,bs,wh)
+
+let initial_state map = (map,Point.to_point (0,0),Machine.initial_state)
 
 let interpreter map =
   let rec aux state =
@@ -443,7 +442,7 @@ let interpreter map =
         in let inst  = Instructions.transition th tl
         in let mach2 = Machine.next_state mach1 blocksize inst
         in aux (map,coord1,mach2)
-  in let state0 = init_state map 
+  in let state0 = initial_state map
   in aux state0
 
                 

@@ -1,6 +1,6 @@
 type t
 
-val init_machine: t
+val initial_state: t
 
 val next_state : t -> int -> Instructions.instr -> t
 (* machine, blocksize, instruction *)
