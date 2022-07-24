@@ -6,8 +6,8 @@ let coord_list_to_string l =
   in String.concat ";" (List.map coord_to_string l)
 
 
-let verb_level = 3
-let step_by_step = true
+let verb_level = 0
+let step_by_step = false
 
 let print_string  verb s  = 
   if verb < verb_level
