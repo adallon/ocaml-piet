@@ -41,24 +41,22 @@ let codel_to_string = function
   | Black -> " N" (* as Noir or Night *)
   | Codel (h,l) -> String.concat "" [lightness_to_string l ; hue_to_string h]
 
+  (*
 type memorized_data = bool * int * ((int*int) option)
+*)
 type codel_map = 
   (codel array array) *
-  (int option array array) *
-  int ref *
-  (int * Direction.direction * Direction.hand, memorized_data) Hashtbl.t
+  (int option array array) * 
+  int ref * Hashmemory.t
 
   (*
    *the codel array array represents the codel map
    *the int option array array represents the block numbers
    of the codels once it is set
    *the int represents the current max block number
-   * the hashtable is used to memorize block info to avoid costly
+   * the hashmemory is used to memorize block info to avoid costly
    * computings.
-   * It takes as input the block number, 
-   * the DP and CC and returns the blocksize 
-   * and the coordinate of the next point in this direction
-   * if there is one
+   * See hashmemory.ml
    *)
 
 let print_coord_trace (x,y) =
@@ -74,6 +72,9 @@ let codel_transition map (x0,y0) (x1,y1) =
   let map0,_,_,_ = map in
   let c1 = map0.(x0).(y0) in
   let c2 = map0.(x1).(y1) in
+  let _ = assert(c1 != c2) in 
+  (* c1 != c2 as we do not call the transition function
+    * when we go through a white codel *)
   let c1_string = codel_to_string c1 in
   let c2_string = codel_to_string c2 in
   let _ =
@@ -119,7 +120,7 @@ let codel_map_create nx ny =
           arr_group.(n-1) <- Array.make ny None ;
           aux (n-1)
         end
-  in let _ = aux nx in (arr_map,arr_group,ref 0,Hashtbl.create (nx*ny))
+  in let _ = aux nx in (arr_map,arr_group,ref 0,Hashmemory.create (nx*ny))
 
 let codel_map_to_string codel_map =
   let map0,_,_,_ = codel_map in
@@ -248,9 +249,9 @@ let get_codel_block map0 i j =
     | exploring -> aux explored exploring
   in aux explored explored
 
-let next_cases map dir hand (cX,cY) =
+let next_cases (map:codel_map) dir hand (cX,cY) =
   let dir_and_hands = Direction.dir_hand_order dir hand in
-  let map0,group,maxG,tab = (map:codel_map) in
+  let map0,group,maxG,tab = map in
 
   let get_next_coord wh d (x,y) =
     let rec aux (x0,y0) wh (x,y) =
@@ -273,66 +274,42 @@ let next_cases map dir hand (cX,cY) =
   
   in let get_possibility (d,h) = 
     let _ =
-      Util.print_string 1 "Current direction ";
+      Util.print_string 1 "  Current direction ";
       Util.print_endline 1 (Direction.direction_to_string d); 
-      Util.print_string 1 "Current hand ";
+      Util.print_string 1 "  Current hand ";
       Util.print_endline 1 (Direction.hand_to_string h); 
     in match map0.(cX).(cY),group.(cX).(cY) with
-    | White,Some(g) ->
+    | White,Some(_) ->
         let _ =
-          Util.print_endline 1 "We are at a white codel";
-          Util.print_endline 1 "  (Direction seen before)";
-        in
-        if Hashtbl.mem tab (g,d,h)
-        then Hashtbl.find tab (g,d,h)
-        else let wh,next_p = 
+          Util.print_endline 1 "  We are at a white codel";
+          Util.print_endline 1 "    (Seen before)";
+        in let wh,next_p = 
           get_next_coord true d (Direction.next_point (cX,cY) d)
-        in let _ = Hashtbl.add tab (g,d,h) (wh,0,next_p)
         in (wh,0,next_p)
-        (* = Hashtbl.find tab (g,d,h) *)
     | White,None ->
         let _ =
-          Util.print_endline 1 "We are at a white codel";
-          Util.print_endline 1 "  (Not seen yet)";
+          Util.print_endline 1 "  We are at a white codel";
+          Util.print_endline 1 "    (Not seen yet)";
         in
         let gVal = !maxG in
         let    _ = maxG:=!maxG+1 ; group.(cX).(cY) <- Some(gVal) in
         let wh,next_p =
           get_next_coord true d (Direction.next_point (cX,cY) d)
-        in let _ = Hashtbl.add tab (gVal,d,h) (wh,0,next_p)
+        (* in let _ = Hashtbl.add tab (gVal,d,h) (wh,0,next_p) *)
         in (wh,0,next_p)
         (* = Hashtbl.find tab (g,d,h) *)
+    |Black,_ -> assert(false) (* we cannot be at a black codel *)
     | _,Some(g) ->
         let _ =
-          Util.print_endline 1 "We are at a color codel";
-          Util.print_endline 1 "  (Seen before)";
-        in
-        if Hashtbl.mem tab (g,d,h)
-        then Hashtbl.find tab (g,d,h)
-        else 
-          let color_block = get_codel_block map cX cY in
-          let blocksize = List.length color_block in
-          let f_list = Direction.furthest color_block d in
-          let cc_dir = Direction.rotate_hand d h in
-          let outside_point = 
-            (* points to go out of the block,
-            * with no consideration of the possibility of it.
-            * We examine now if they are inside the map,
-            * if they are black/white.
-            * Note that outside cases are handled as black *)
-            match Direction.furthest f_list cc_dir with
-            | [x1,y1] -> Direction.next_point (x1,y1) d
-            | _ -> assert(false) 
-            (* only one element at this point :
-             * we are at a border of an edge. *)
-          in let wh,next_p = 
-            get_next_coord false d outside_point
-        in let _ = Hashtbl.add tab (g,d,h) (wh,0,next_p)
-        in (wh,blocksize,next_p)
+          Util.print_endline 1 "  We are at a color codel";
+          Util.print_endline 1 "    (Color block seen before)";
+        in let size,corner = Hashmemory.get_corner tab g d h
+        in let wh,next_p = get_next_coord false d corner
+        in (wh,size,next_p)
     | _,None ->
         let _ =
-          Util.print_endline 1 "We are at a color codel";
-          Util.print_endline 1 "  (Not seen yet)";
+          Util.print_endline 1 "  We are at a color codel";
+          Util.print_endline 1 "    (Color block not seen yet)";
         in
         let color_block = get_codel_block map cX cY in
         let blocksize = List.length color_block in
@@ -344,47 +321,36 @@ let next_cases map dir hand (cX,cY) =
                 begin group.(x).(y) <- Some(gVal) ; aux t end
           in aux color_block
         in 
-        let f_list = Direction.furthest color_block d in
-        let cc_dir = Direction.rotate_hand d h in
-        let outside_point = 
-          (* points to go out of the block,
-           * with no consideration of the possibility of it.
-           * We examine now if they are inside the map,
-           * if they are black/white.
-           * Note that outside cases are handled as black *)
-          match Direction.furthest f_list cc_dir with
-          | [x1,y1] -> Direction.next_point (x1,y1) d
-          | _ -> assert(false) 
-          (* only one element at this point :
-           * we are at a border of an edge. *)
-        in let (wh,next_p) = 
-          get_next_coord false d outside_point
-        in let _ = 
-          Hashtbl.add tab (gVal,d,h) (wh,blocksize,next_p)
-        in ((wh,blocksize,next_p):memorized_data)
-        (* = Hashtbl.find tab (g,d,h) *)
+        let _ = Hashmemory.add_group tab gVal color_block blocksize in
+        let size,corner = Hashmemory.get_corner tab gVal d h in
+        let _ = assert(size = blocksize) in
+        let (wh,next_p) = get_next_coord false d corner
+        in (wh,size,next_p)
 
     in let rec find_direction = function
       | [] -> 
           let _ =
-            Util.print_endline 1 "No direction has been found. Execution will terminate."
+            Util.print_endline 1 "  No direction has been found. Execution will terminate."
           in
           None
       | (d,h)::t -> 
           let _ =
-            Util.print_string 1 "Trying with direction ";
+            Util.print_string 1 " Trying with direction ";
             Util.print_string 1 (Direction.direction_to_string d); 
             Util.print_string 1 " and hand ";
             Util.print_endline 1 (Direction.hand_to_string h); 
-          in
-          begin match get_possibility (d,h) with
+          in let _ = 
+            if Util.step_by_step 
+            then let _ = print_string ">"; read_line () in ()
+            else ()
+          in begin match get_possibility (d,h) with
           | (wh,bs,Some(x,y)) ->
             let _ =
-              Util.print_endline 1 "Direction accepted";
+              Util.print_endline 1 "  Direction accepted";
             in Some(wh,d,h,bs,x,y)
           | (_,_,None) -> 
             let _ =
-              Util.print_endline 1 "Direction rejected";
+              Util.print_endline 1 "  Direction rejected";
               in find_direction t
           end
     in find_direction dir_and_hands
@@ -415,8 +381,16 @@ let interpreter map =
     | Some(state1,blocksize,wh) ->
         let (_,coord1,mach1) = state1 in
         let th,tl =
-          if wh then (0,0)
-          else codel_transition map coord0 coord1 
+          if wh 
+          then
+            let _ =
+              Util.print_endline 1 "  Passing through a white codel.";
+              Util.print_endline 1 "  No instruction executed.";
+            in (0,0)
+          else 
+            let _ =
+              Util.print_endline 1 "  No white codel seen.";
+            in codel_transition map coord0 coord1 
         in let inst  = Instructions.transition th tl
         in let mach2 = Machine.next_state mach1 blocksize inst
         in aux (map,coord1,mach2)
