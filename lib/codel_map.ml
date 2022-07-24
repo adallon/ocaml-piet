@@ -213,7 +213,8 @@ let codel_map_example =
   in arr
 *)
 
-let get_codel_block (map:codel array array) i j =
+let get_codel_block map0 i j =
+  let (map,_,_,_) = map0 in 
   let explored  = [(i,j)] in
 
   let add_if_not_in seen new_xplr a =
@@ -249,46 +250,70 @@ let get_codel_block (map:codel array array) i j =
 
 let next_cases map dir hand (cX,cY) =
   let dir_and_hands = Direction.dir_hand_order dir hand in
-  let map0,group,maxG,tab = map in
+  let map0,group,maxG,tab = (map:codel_map) in
 
-  let get_next_coord wh (d,h,(x,y)) =
-    let rec aux (x0,y0) wh (d,h,(x,y)) =
+  let get_next_coord wh d (x,y) =
+    let rec aux (x0,y0) wh (x,y) =
       let not_black,white = codel_black_white map x y in
       if white
       (* the codel is white: we continue until we find a border,
        * a colored block or a black codel *)
-      then aux (x0,y0) true (d,h,Direction.next_point (x,y) d)
+      then aux (x0,y0) true (Direction.next_point (x,y) d)
       else if not_black
       (* it is neither white nor black: it is a colored block *)
-      then wh,d,h,Some(x,y)
+      then wh,Some(x,y)
       else (* it is black or a border *)
         if wh = false ||(x0=x && y0 = y)
         (* We were never at a white block, 
          * or the direction is completely obstructed.
          *)
-        then wh,d,h,None 
-        else true,d,h,Some(x0,y0)
-    in aux (x,y) wh (d,h,(x,y)) 
+        then wh,None 
+        else true,Some(x0,y0)
+    in aux (x,y) wh (x,y) 
   
-  in let rec hash_update gVal blocksize = function
-          | [] -> ()
-          | (wh,d,h,o)::t -> Hashtbl.add tab (gVal,d,h) (wh,blocksize,o); hash_update gVal blocksize t
-  in let possibilities = 
+  in let get_possibility (d,h) = 
     match map0.(cX).(cY),group.(cX).(cY) with
-    |     _,Some(g) -> 
-      List.map (fun (d,h) -> (d,h,Hashtbl.find tab (g,d,h))) dir_and_hands
+    | White,Some(g) ->
+        if Hashtbl.mem tab (g,d,h)
+        then Hashtbl.find tab (g,d,h)
+        else let wh,next_p = 
+          get_next_coord true d (Direction.next_point (cX,cY) d)
+        in let _ = Hashtbl.add tab (g,d,h) (wh,0,next_p)
+        in (wh,0,next_p)
+        (* = Hashtbl.find tab (g,d,h) *)
     | White,None ->
         let gVal = !maxG in
         let    _ = maxG:=!maxG+1 ; group.(cX).(cY) <- Some(gVal) in
-        let outside_points = 
-          List.map (fun (d,h) -> (d,h,Direction.next_point (cX,cY) d)) dir_and_hands 
-        in let next_points_computed =
-          List.map (get_next_coord true) outside_points
-        in let _ = hash_update gVal 0 next_points_computed 
-        in
-        List.map (fun (d,h) -> (d,h, Hashtbl.find tab (gVal,d,h))) dir_and_hands
+        let wh,next_p =
+          get_next_coord true d (Direction.next_point (cX,cY) d)
+        in let _ = Hashtbl.add tab (gVal,d,h) (wh,0,next_p)
+        in (wh,0,next_p)
+        (* = Hashtbl.find tab (g,d,h) *)
+    | _,Some(g) ->
+        if Hashtbl.mem tab (g,d,h)
+        then Hashtbl.find tab (g,d,h)
+        else 
+          let color_block = get_codel_block map cX cY in
+          let blocksize = List.length color_block in
+          let f_list = Direction.furthest color_block d in
+          let cc_dir = Direction.rotate_hand d h in
+          let outside_point = 
+            (* points to go out of the block,
+            * with no consideration of the possibility of it.
+            * We examine now if they are inside the map,
+            * if they are black/white.
+            * Note that outside cases are handled as black *)
+            match Direction.furthest f_list cc_dir with
+            | [x1,y1] -> Direction.next_point (x1,y1) d
+            | _ -> assert(false) 
+            (* only one element at this point :
+             * we are at a border of an edge. *)
+          in let wh,next_p = 
+            get_next_coord true d outside_point
+        in let _ = Hashtbl.add tab (g,d,h) (wh,0,next_p)
+        in (wh,blocksize,next_p)
     | _,None ->
-        let color_block = get_codel_block map0 cX cY in
+        let color_block = get_codel_block map cX cY in
         let blocksize = List.length color_block in
         let gVal = !maxG in
         let _ =
@@ -297,30 +322,34 @@ let next_cases map dir hand (cX,cY) =
             | (x,y)::t ->
                 begin group.(x).(y) <- Some(gVal) ; aux t end
           in aux color_block
-        in let to_map (d,h) =
-          let f_list = Direction.furthest color_block d in
-          let cc_dir = Direction.rotate_hand d h in
-          match Direction.furthest f_list cc_dir with
-          | [x1,y1] -> (d,h,Direction.next_point (x1,y1) d)
-          | _ -> assert(false) 
-          (* only one element at this point :
-           * we are at a border of an edge    *)
-        in let outside_points = List.map to_map dir_and_hands
+        in 
+        let f_list = Direction.furthest color_block d in
+        let cc_dir = Direction.rotate_hand d h in
+        let outside_point = 
           (* points to go out of the block,
            * with no consideration of the possibility of it.
            * We examine now if they are inside the map,
            * if they are black/white.
            * Note that outside cases are handled as black *)
-        in let next_points_computed =
-          List.map (get_next_coord false) outside_points
-        in let _ = hash_update gVal blocksize next_points_computed
-        in 
-        List.map (fun (d,h) -> (d,h, Hashtbl.find tab (gVal,d,h))) dir_and_hands
-    in let rec handle_possibilities = function
+          match Direction.furthest f_list cc_dir with
+          | [x1,y1] -> Direction.next_point (x1,y1) d
+          | _ -> assert(false) 
+          (* only one element at this point :
+           * we are at a border of an edge. *)
+        in let (wh,next_p) = 
+          get_next_coord false d outside_point
+        in let _ = 
+          Hashtbl.add tab (gVal,d,h) (wh,blocksize,next_p)
+        in ((wh,blocksize,next_p):memorized_data)
+        (* = Hashtbl.find tab (g,d,h) *)
+    in let rec find_direction = function
       | [] -> None
-      | (_,_,(_,_,None))::t -> handle_possibilities t
-      | (d,h,(wh,bs,Some(x,y)))::_ -> Some(wh,d,h,bs,x,y)
-    in handle_possibilities possibilities
+      | (d,h)::t -> 
+          begin match get_possibility (d,h) with
+          | (wh,bs,Some(x,y)) -> Some(wh,d,h,bs,x,y)
+          | (_,_,None) -> find_direction t
+          end
+    in find_direction dir_and_hands
 
 
 let init_state map = (map,(0,0),Machine.init_machine)
