@@ -97,6 +97,7 @@ module Direction = struct
     | a::t -> aux [a] a dir t
 end
 
+(*
 module type MAP = sig
   type t
   type elt
@@ -104,5 +105,6 @@ module type MAP = sig
   val sizeX : t -> int
   val sizeY : t -> int
 end
+*)
 
 

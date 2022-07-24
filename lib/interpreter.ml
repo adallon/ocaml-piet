@@ -4,7 +4,7 @@ open Geometry
 type memorized_data = bool * int * ((int*int) option)
 *)
 type codel_map = 
-  (codel array array) *
+  (Codel.t array array) *
   (int option array array) * 
   int ref * Hashmemory.t
 
@@ -25,8 +25,8 @@ let codel_transition map p0 p1 =
   let _ = assert(c1 != c2) in 
   (* c1 != c2 as we do not call the transition function
     * when we go through a white codel *)
-  let c1_string = codel_to_string c1 in
-  let c2_string = codel_to_string c2 in
+  let c1_string = Codel.to_string c1 in
+  let c2_string = Codel.to_string c2 in
   let _ =
     Util.print_newline 0 ();
     Util.print_string 0 (Point.to_string p0);
@@ -46,16 +46,16 @@ let codel_transition map p0 p1 =
   match c1,c2 with
   |White,_|_,White|Black,_|_,Black -> assert(false)
   (* no transition with a non-colored block *)
-  |Codel(h0,l0),Codel(h1,l1) -> hue_diff h0 h1, lightness_diff l0 l1
+  |c1,c2 -> Codel.diff c1 c2
 
 let codel_black_white map x y = 
   let map0,_,_,_ = map in
   let maxX = Array.length map0 in
   let maxY = Array.length map0.(0) in
   let is_not_black = 
-    x>=0 && x < maxX && y >= 0 && y < maxY && map0.(x).(y) != Black
+    x>=0 && x < maxX && y >= 0 && y < maxY && map0.(x).(y) != Codel.Black
   in let is_white =
-    x>=0 && x < maxX && y >= 0 && y < maxY && map0.(x).(y) = White
+    x>=0 && x < maxX && y >= 0 && y < maxY && map0.(x).(y) = Codel.White
   in is_not_black,is_white
 
 
@@ -66,7 +66,7 @@ let codel_map_create nx ny =
     | 0 -> ()
     | n -> 
         begin 
-          arr_map.(n-1)   <- Array.make ny Black ; 
+          arr_map.(n-1)   <- Array.make ny Codel.Black ; 
           arr_group.(n-1) <- Array.make ny None ;
           aux (n-1)
         end
@@ -80,41 +80,9 @@ let codel_map_to_string codel_map =
   in 
   let get_line y = 
     let l =
-      List.map (fun x -> codel_to_string map0.(x).(y)) indexesX 
+      List.map (fun x -> Codel.to_string map0.(x).(y)) indexesX 
     in String.concat "." l
   in String.concat "\n" (List.map get_line indexesY)
-
-
-let codel r g b =
-  match r,g,b with
-  | 255,255,255 -> White
-  |   0,0,0     -> Black
-
-  | 255,192,192 -> Codel(Red,Light)
-  | 255,  0,  0 -> Codel(Red,Normal)
-  | 192,  0,  0 -> Codel(Red,Dark)
-
-  | 255,255,192 -> Codel(Yellow,Light)
-  | 255,255,  0 -> Codel(Yellow,Normal)
-  | 192,192,  0 -> Codel(Yellow,Dark)
-
-  | 192,255,192 -> Codel(Green,Light)
-  |   0,255,  0 -> Codel(Green,Normal)
-  |   0,192,  0 -> Codel(Green,Dark)
-
-  | 192,255,255 -> Codel(Cyan ,Light)
-  |   0,255,255 -> Codel(Cyan ,Normal)
-  |   0,192,192 -> Codel(Cyan ,Dark)
-
-  | 192,192,255 -> Codel(Blue ,Light)
-  |   0,  0,255 -> Codel(Blue ,Normal)
-  |   0,  0,192 -> Codel(Blue ,Dark)
-
-  | 255,192,255 -> Codel(Magenta, Light)
-  | 255,  0,255 -> Codel(Magenta, Normal)
-  | 192,  0,192 -> Codel(Magenta, Dark)
-
-  |   _,  _,  _ -> White
 
 
 let png_to_map fpath =
@@ -129,7 +97,7 @@ let png_to_map fpath =
  in let (map,group,maxG,tab) = 
    codel_map_create img.width img.height
  in let f x y r g b =
-   let c = codel r g b in let _ = map.(x).(y) <- c in ()
+   let c = Codel.of_rgb r g b in let _ = map.(x).(y) <- c in ()
  in let g x y = Image.read_rgb img x y (f x y) 
  in let rec apply_g_x x = function
    | 0 -> ()
@@ -270,14 +238,14 @@ let next_cases (map:codel_map) dir hand cur_p =
       Util.print_endline 1 (Hand.to_string h); 
     in let cX,cY = Point.x cur_p,Point.y cur_p
     in match map0.(cX).(cY),group.(cX).(cY) with
-    | White,Some(_) ->
+    | Codel.White,Some(_) ->
         let _ =
           Util.print_endline 1 "  We are at a white codel";
           Util.print_endline 1 "    (Seen before)";
         in let wh,next_p = 
           get_next_coord true d (Direction.next_point cur_p d)
         in (wh,0,next_p)
-    | White,None ->
+    | Codel.White,None ->
         let _ =
           Util.print_endline 1 "  We are at a white codel";
           Util.print_endline 1 "    (Not seen yet)";
@@ -289,7 +257,7 @@ let next_cases (map:codel_map) dir hand cur_p =
         (* in let _ = Hashtbl.add tab (gVal,d,h) (wh,0,next_p) *)
         in (wh,0,next_p)
         (* = Hashtbl.find tab (g,d,h) *)
-    |Black,_ -> assert(false) (* we cannot be at a black codel *)
+    |Codel.Black,_ -> assert(false) (* we cannot be at a black codel *)
     | _,Some(g) ->
         let _ =
           Util.print_endline 1 "  We are at a color codel";
