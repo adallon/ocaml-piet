@@ -381,10 +381,12 @@ let next_cases (map:codel_map) dir hand (cX,cY) =
             Util.print_string 1 (Direction.direction_to_string d); 
             Util.print_string 1 " and hand ";
             Util.print_endline 1 (Direction.hand_to_string h); 
+            (*
           in let _ = 
-            if Util.step_by_step 
+            if Util.get_step_by_step ()
             then let _ = print_string ">"; read_line () in ()
             else ()
+            *)
           in begin match get_possibility (d,h) with
           | (wh,bs,Some(x,y)) ->
             let _ =
@@ -409,9 +411,9 @@ let explorator state =
   | Some(wh,d,h,bs,x,y) -> 
       let new_state = (map,(x,y),Machine.set d h machine)
       in let _ = 
-        if Util.step_by_step 
+        if Util.get_step_by_step ()
         then let _ = print_string ">"; read_line () in ()
-        else ()
+        else () 
       in Some(new_state,bs,wh)
 
 let interpreter map =
