@@ -7,20 +7,21 @@ module Point : sig
   val to_string: t -> string
 end
 
+module Hand : sig
+  type t = Left | Right
+  val to_string: t -> string
+  val switch : t -> t
+end
+
 type direction
-type hand = Left | Right
 
 val direction_to_string : direction -> string 
-val hand_to_string : hand -> string
 
 val init_dir: direction
-val init_hand: hand
-
-val hand_switch: hand -> hand
 val rotate: direction -> int -> direction
 val furthest : Point.t list -> direction -> Point.t list
 
 val next_point: Point.t -> direction -> Point.t
-val dir_hand_order: direction -> hand -> (direction*hand) list
+val dir_hand_order: direction -> Hand.t -> (direction*Hand.t) list
 
 

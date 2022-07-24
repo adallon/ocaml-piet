@@ -311,7 +311,7 @@ let next_cases (map:codel_map) dir hand cur_p =
       Util.print_string 1 "  Current direction ";
       Util.print_endline 1 (direction_to_string d); 
       Util.print_string 1 "  Current hand ";
-      Util.print_endline 1 (hand_to_string h); 
+      Util.print_endline 1 (Hand.to_string h); 
     in let cX,cY = Point.x cur_p,Point.y cur_p
     in match map0.(cX).(cY),group.(cX).(cY) with
     | White,Some(_) ->
@@ -375,7 +375,7 @@ let next_cases (map:codel_map) dir hand cur_p =
             Util.print_string 1 " Trying with direction ";
             Util.print_string 1 (direction_to_string d); 
             Util.print_string 1 " and hand ";
-            Util.print_endline 1 (hand_to_string h); 
+            Util.print_endline 1 (Hand.to_string h); 
             (*
           in let _ = 
             if Util.get_step_by_step ()

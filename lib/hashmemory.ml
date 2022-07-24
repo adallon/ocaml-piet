@@ -23,8 +23,8 @@ let get_corner tab g d h =
     then
       let (left,right) = Hashtbl.find corner_tab d in 
       match h with
-      | Left  -> size,left
-      | Right -> size,right
+      | Hand.Left  -> size,left
+      | Hand.Right -> size,right
     else
       let edge = furthest block d in
       let left_dir  = rotate d (-1) in
@@ -39,8 +39,8 @@ let get_corner tab g d h =
              * we are at a border of an edge. *)
       in let _ = Hashtbl.add corner_tab d (left_point,right_point)
       in match h with
-      | Left -> size,left_point
-      | Right -> size,right_point
+      | Hand.Left -> size,left_point
+      | Hand.Right -> size,right_point
     end
   else assert(false)
     (* Group has not been set yet: we should not use the function

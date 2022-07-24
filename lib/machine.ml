@@ -1,4 +1,5 @@
 open Instructions
+open Geometry
 
 (*
  * The Piet stack machine is a stack and the DP and CC,
@@ -256,10 +257,10 @@ module Stack : Stack_type =
 end  
 
 
-type t = Stack.t * Geometry.direction * Geometry.hand
+type t = Stack.t * direction * Hand.t
 (* Stack, Geometry Pointer DP, Codel Chooser CC *)
 
-let init_machine = Stack.empty,Geometry.init_dir,Geometry.init_hand
+let init_machine = Stack.empty,init_dir,Hand.Left
 
 let get_direction ((_,b,_):t) = b
 let get_hand      ((_,_,c):t) = c
@@ -270,9 +271,9 @@ let next_state machine prev_blocksize inst =
   let (st,dp,cc) = machine in 
   let print_DPCC dp cc =
     begin
-    Util.print_string 0 (Geometry.direction_to_string dp ); 
+    Util.print_string 0 (direction_to_string dp ); 
     Util.print_string 0 ","; 
-    Util.print_string 0 (Geometry.hand_to_string cc); 
+    Util.print_string 0 (Hand.to_string cc); 
     Util.print_endline 0 "" 
     end
   in let _ = print_DPCC dp cc
@@ -323,7 +324,7 @@ let next_state machine prev_blocksize inst =
           let ncc = 
             if n mod 2 = 0 
             then cc 
-            else Geometry.hand_switch cc
+            else Geometry.Hand.switch cc
           in
           let _ = 
             Util.print_string 0 "Switch -> " ;

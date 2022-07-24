@@ -1,4 +1,3 @@
-
 module Point = struct
   type t = int * int
 
@@ -15,7 +14,19 @@ module Point = struct
       (abs(x1-x) < 2 &&  y1 = y) || 
       (abs(y1-y) < 2 &&  x1 = x) ||
       (is_close (x,y) t) 
-end;;
+end
+
+module Hand = struct
+  type t = Left | Right
+
+  let to_string = function
+    | Left  -> "left"
+    | Right -> "right"
+
+  let switch = function
+    | Left  -> Right
+    | Right -> Left
+end
 
 
 
@@ -27,14 +38,7 @@ let direction_to_string = function
   | South -> "South"
   | West  -> "West"
 
-type hand      = Left  | Right
-
-let hand_to_string = function
-  | Left  -> "left"
-  | Right -> "right"
-
 let init_dir  = East
-let init_hand = Left
 
 let rec direction_from_int = function
   | 0 -> North
@@ -87,9 +91,6 @@ let furthest l dir =
   | a::t -> aux [a] a dir t
 
 
-let hand_switch = function
-  | Left  -> Right
-  | Right -> Left
 
   (*
 let rotate_hand dir hand = 
@@ -108,6 +109,6 @@ let dir_hand_order dir hand =
   let dir2 = rotate dir1 1 in
   let dir3 = rotate dir2 1 in
   let hand0 = hand in
-  let hand1 = hand_switch hand in
+  let hand1 = Hand.switch hand in
   [dir0,hand0; dir0,hand1; dir1,hand1; dir1,hand0;
    dir2,hand0; dir2,hand1; dir3,hand1; dir3,hand0]
