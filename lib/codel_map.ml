@@ -214,8 +214,39 @@ let codel_map_example =
   in arr
 *)
 
-let get_codel_block map0 i j =
-  let (map,_,_,_) = map0 in 
+let get_codel_block map0 x y =
+  let (map,group,_,_) = map0 in 
+  let _ = assert(group.(x).(y) = None) in
+  let codel = map.(x).(y) in
+  let xMax = Array.length map in
+  let yMax = Array.length map.(0) in
+  let rec line res i = function
+    | 0 -> res
+    | j -> if (codel = map.(i).(j-1)) && (group.(i).(j-1) = None) && (i != x || j-1!= y) 
+           then line ((i,j-1)::res) i (j-1)
+           else line res i (j-1)
+  in let rec all_vals res = function
+    | 0 -> res
+    | i -> all_vals (line res (i-1) yMax) (i-1) 
+  in let candidates = all_vals [] xMax in
+  let rec is_close (x,y) = function
+    | [] -> false
+    | (x1,y1)::t -> (abs(x1-x) < 2 && abs(y1-y) < 2)||(is_close (x,y) t) 
+  in let rec find_close new_found remain_l target_l = function
+    | [] -> new_found,remain_l
+    | x::t -> 
+        if is_close x target_l 
+        then find_close (x::new_found) remain_l target_l t
+        else find_close new_found (x::remain_l) target_l t
+
+  in let rec until_end candidates target =
+    let new_found,remain_l = find_close [] [] target candidates
+    in match new_found with
+    | [] ->  target
+    | _ -> until_end remain_l (List.rev_append new_found target)
+      
+  in until_end candidates [(x,y)]
+  (*
   let explored  = [(i,j)] in
 
   let add_if_not_in seen new_xplr a =
@@ -248,6 +279,7 @@ let get_codel_block map0 i j =
     | [] -> explored
     | exploring -> aux explored exploring
   in aux explored explored
+  *)
 
 let next_cases (map:codel_map) dir hand (cX,cY) =
   let dir_and_hands = Direction.dir_hand_order dir hand in
@@ -304,7 +336,7 @@ let next_cases (map:codel_map) dir hand (cX,cY) =
           Util.print_endline 1 "  We are at a color codel";
           Util.print_endline 1 "    (Color block seen before)";
         in let size,corner = Hashmemory.get_corner tab g d h
-        in let wh,next_p = get_next_coord false d corner
+        in let wh,next_p = get_next_coord false d (Direction.next_point corner d)
         in (wh,size,next_p)
     | _,None ->
         let _ =
@@ -324,7 +356,7 @@ let next_cases (map:codel_map) dir hand (cX,cY) =
         let _ = Hashmemory.add_group tab gVal color_block blocksize in
         let size,corner = Hashmemory.get_corner tab gVal d h in
         let _ = assert(size = blocksize) in
-        let (wh,next_p) = get_next_coord false d corner
+        let (wh,next_p) = get_next_coord false d (Direction.next_point corner d)
         in (wh,size,next_p)
 
     in let rec find_direction = function

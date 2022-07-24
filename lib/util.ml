@@ -5,6 +5,7 @@ let coord_list_to_string l =
     String.concat "" ["(";string_of_int i;",";string_of_int j;")"]
   in String.concat ";" (List.map coord_to_string l)
 
+
 let verb_level = 2
 let step_by_step = true
 
