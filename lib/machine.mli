@@ -2,7 +2,7 @@ type t
 
 val initial_state: t
 
-val next_state : t -> int -> Instructions.instr -> t
+val next_state : t -> int -> Instructions.t -> t
 (* machine, blocksize, instruction *)
 
 val get_direction: t -> Geometry.Direction.t

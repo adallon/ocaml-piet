@@ -1,4 +1,4 @@
-type instr = 
+type t = 
   | NoInst    | Push      | Pop (* basic stack *)   
   | Add       | Substract | Multiply | Divide    | Mod (* Basic arithmetic *)
   | Not       | Greater (* Logic  *)    
@@ -7,4 +7,4 @@ type instr =
   | InInt     | InChar  (* io : input  *)  
   | OutInt    | OutChar (* io : output *)
 
-val transition : int -> int -> instr
+val transition : int -> int -> t

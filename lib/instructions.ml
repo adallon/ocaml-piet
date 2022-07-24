@@ -1,4 +1,4 @@
-type instr = 
+type t = 
   | NoInst    | Push      | Pop (* basic stack *)   
   | Add       | Substract | Multiply | Divide    | Mod (* Basic arithmetic *)
   | Not       | Greater (* Logic  *)    
@@ -7,7 +7,7 @@ type instr =
   | InInt     | InChar  (* io : input  *)  
   | OutInt    | OutChar (* io : output *)
 
-let transition th tl =
+let transition_int th tl =
   match th,tl with
   | 0,0 -> NoInst
   | 0,1 -> Push
@@ -34,3 +34,5 @@ let transition th tl =
   | 5,2 -> OutChar
 
   | _ -> assert(false) (* should never occur *)
+
+let transition = transition_int

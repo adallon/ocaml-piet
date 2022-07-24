@@ -18,7 +18,8 @@ type codel_map =
    * See hashmemory.ml
    *)
 
-let codel_transition map p0 p1 =
+  (*
+let codel_transition p0 p1 map =
   let map0,_,_,_ = map in
   let c1 = map0.(Point.x p0).(Point.y p0) in
   let c2 = map0.(Point.x p1).(Point.y p1) in
@@ -47,6 +48,7 @@ let codel_transition map p0 p1 =
   |White,_|_,White|Black,_|_,Black -> assert(false)
   (* no transition with a non-colored block *)
   |c1,c2 -> Codel.diff c1 c2
+  *)
 
 let codel_black_white map x y = 
   let map0,_,_,_ = map in
@@ -347,12 +349,12 @@ let initial_state map = (map,Point.to_point (0,0),Machine.initial_state)
 
 let interpreter map =
   let rec aux state =
-    let (_,coord0,_) = state in 
+    let (_,p0,_) = state in 
     let trans_opt = explorator state in
     match trans_opt with
     | None -> Util.print_string 0 "\nEnd of execution\n"
     | Some(state1,blocksize,wh) ->
-        let (_,coord1,mach1) = state1 in
+        let (_,p1,mach1) = state1 in
         let th,tl =
           if wh 
           then
@@ -363,10 +365,31 @@ let interpreter map =
           else 
             let _ =
               Util.print_endline 1 "  No white codel seen.";
-            in codel_transition map coord0 coord1 
+            in let map0,_,_,_ = map in
+            let c1 = map0.(Point.x p0).(Point.y p0) in
+            let c2 = map0.(Point.x p1).(Point.y p1) in
+            let c1_string = Codel.to_string c1 in
+            let c2_string = Codel.to_string c2 in
+            let _ =
+              Util.print_newline 0 ();
+              Util.print_string 0 (Point.to_string p0);
+              Util.print_string 0 ":";
+              Util.print_string 0 c1_string;
+              Util.print_string 0 " -> ";
+              Util.print_string 0 (Point.to_string p1);
+              Util.print_string 0 ":";
+              Util.print_string 0 c2_string;
+              Util.print_string 0 " ";
+            (* Util.print_newline 0 (); *)
+            (* next printing is the transition of the machine.
+             * See function next_state in machine.ml
+             * No endline necessary.
+             *)
+            in Codel.diff c1 c2
+
         in let inst  = Instructions.transition th tl
         in let mach2 = Machine.next_state mach1 blocksize inst
-        in aux (map,coord1,mach2)
+        in aux (map,p1,mach2)
   in let state0 = initial_state map
   in aux state0
 
