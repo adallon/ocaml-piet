@@ -283,7 +283,6 @@ let get_codel_block map0 p =
   *)
 
 let next_cases (map:codel_map) dir hand cur_p =
-  let dir_and_hands = Direction.dir_hand_order dir hand in
   let map0,group,maxG,tab = map in
 
   let get_next_coord wh d p =
@@ -392,6 +391,17 @@ let next_cases (map:codel_map) dir hand cur_p =
               Util.print_endline 1 "  Direction rejected";
               in find_direction t
           end
+
+    in let dir_and_hands =
+
+      let dir0 = dir in
+      let dir1 = Direction.rotate dir0 1 in
+      let dir2 = Direction.rotate dir1 1 in
+      let dir3 = Direction.rotate dir2 1 in
+      let hand0 = hand in
+      let hand1 = Hand.switch hand in
+      [dir0,hand0; dir0,hand1; dir1,hand1; dir1,hand0;
+       dir2,hand0; dir2,hand1; dir3,hand1; dir3,hand0]
     in find_direction dir_and_hands
 
 

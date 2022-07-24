@@ -20,7 +20,6 @@ module Direction : sig
   val rotate: t -> int -> t
   val next_point: Point.t -> t -> Point.t
   val furthest : Point.t list -> t -> Point.t list
-  val dir_hand_order: t -> Hand.t -> (t *Hand.t) list
 end
 
 
