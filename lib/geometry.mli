@@ -13,15 +13,14 @@ module Hand : sig
   val switch : t -> t
 end
 
-type direction
-
-val direction_to_string : direction -> string 
-
-val init_dir: direction
-val rotate: direction -> int -> direction
-val furthest : Point.t list -> direction -> Point.t list
-
-val next_point: Point.t -> direction -> Point.t
-val dir_hand_order: direction -> Hand.t -> (direction*Hand.t) list
+module Direction : sig
+  type t
+  val to_string : t -> string
+  val east : t
+  val rotate: t -> int -> t
+  val next_point: Point.t -> t -> Point.t
+  val furthest : Point.t list -> t -> Point.t list
+  val dir_hand_order: t -> Hand.t -> (t *Hand.t) list
+end
 
 

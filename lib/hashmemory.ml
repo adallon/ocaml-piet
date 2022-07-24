@@ -3,7 +3,7 @@ open Geometry
 type memorized_data = 
   Point.t list (* list of codel coordinates of the group *)
   * int (* size of the list *)
-  * (direction, Point.t * Point.t ) Hashtbl.t 
+  * (Direction.t, Point.t * Point.t ) Hashtbl.t 
   (* direction, left corner, right corner *)
 
 type t = (int , memorized_data) Hashtbl.t
@@ -26,12 +26,12 @@ let get_corner tab g d h =
       | Hand.Left  -> size,left
       | Hand.Right -> size,right
     else
-      let edge = furthest block d in
-      let left_dir  = rotate d (-1) in
-      let right_dir = rotate d  1   in
+      let edge = Direction.furthest block d in
+      let left_dir  = Direction.rotate d (-1) in
+      let right_dir = Direction.rotate d  1   in
       let (left_point,right_point) = 
-        let l = furthest edge left_dir  in
-        let r = furthest edge right_dir in
+        let l = Direction.furthest edge left_dir  in
+        let r = Direction.furthest edge right_dir in
         match l,r with
             | [coord_l],[coord_r] -> coord_l,coord_r
             | _,_ -> assert(false) 

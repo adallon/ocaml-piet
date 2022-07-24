@@ -283,7 +283,7 @@ let get_codel_block map0 p =
   *)
 
 let next_cases (map:codel_map) dir hand cur_p =
-  let dir_and_hands = dir_hand_order dir hand in
+  let dir_and_hands = Direction.dir_hand_order dir hand in
   let map0,group,maxG,tab = map in
 
   let get_next_coord wh d p =
@@ -293,7 +293,7 @@ let next_cases (map:codel_map) dir hand cur_p =
       if white
       (* the codel is white: we continue until we find a border,
        * a colored block or a black codel *)
-      then aux p0 true (next_point p d)
+      then aux p0 true (Direction.next_point p d)
       else if not_black
       (* it is neither white nor black: it is a colored block *)
       then wh,Some(p)
@@ -309,7 +309,7 @@ let next_cases (map:codel_map) dir hand cur_p =
   in let get_possibility (d,h) = 
     let _ =
       Util.print_string 1 "  Current direction ";
-      Util.print_endline 1 (direction_to_string d); 
+      Util.print_endline 1 (Direction.to_string d); 
       Util.print_string 1 "  Current hand ";
       Util.print_endline 1 (Hand.to_string h); 
     in let cX,cY = Point.x cur_p,Point.y cur_p
@@ -319,7 +319,7 @@ let next_cases (map:codel_map) dir hand cur_p =
           Util.print_endline 1 "  We are at a white codel";
           Util.print_endline 1 "    (Seen before)";
         in let wh,next_p = 
-          get_next_coord true d (next_point cur_p d)
+          get_next_coord true d (Direction.next_point cur_p d)
         in (wh,0,next_p)
     | White,None ->
         let _ =
@@ -329,7 +329,7 @@ let next_cases (map:codel_map) dir hand cur_p =
         let gVal = !maxG in
         let    _ = maxG:=!maxG+1 ; group.(cX).(cY) <- Some(gVal) in
         let wh,next_p =
-          get_next_coord true d (next_point cur_p d)
+          get_next_coord true d (Direction.next_point cur_p d)
         (* in let _ = Hashtbl.add tab (gVal,d,h) (wh,0,next_p) *)
         in (wh,0,next_p)
         (* = Hashtbl.find tab (g,d,h) *)
@@ -340,7 +340,7 @@ let next_cases (map:codel_map) dir hand cur_p =
           Util.print_endline 1 "    (Color block seen before)";
         in let size,corner = Hashmemory.get_corner tab g d h
         in let wh,next_p = 
-          get_next_coord false d (next_point corner d)
+          get_next_coord false d (Direction.next_point corner d)
         in (wh,size,next_p)
     | _,None ->
         let _ =
@@ -361,7 +361,7 @@ let next_cases (map:codel_map) dir hand cur_p =
         let _ = Hashmemory.add_group tab gVal color_block blocksize in
         let size,corner = Hashmemory.get_corner tab gVal d h in
         let _ = assert(size = blocksize) in
-        let (wh,next_p) = get_next_coord false d (next_point corner d)
+        let (wh,next_p) = get_next_coord false d (Direction.next_point corner d)
         in (wh,size,next_p)
 
     in let rec find_direction = function
@@ -373,7 +373,7 @@ let next_cases (map:codel_map) dir hand cur_p =
       | (d,h)::t -> 
           let _ =
             Util.print_string 1 " Trying with direction ";
-            Util.print_string 1 (direction_to_string d); 
+            Util.print_string 1 (Direction.to_string d); 
             Util.print_string 1 " and hand ";
             Util.print_endline 1 (Hand.to_string h); 
             (*
