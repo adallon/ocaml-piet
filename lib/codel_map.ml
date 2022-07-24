@@ -272,8 +272,17 @@ let next_cases map dir hand (cX,cY) =
     in aux (x,y) wh (x,y) 
   
   in let get_possibility (d,h) = 
-    match map0.(cX).(cY),group.(cX).(cY) with
+    let _ =
+      Util.print_string 1 "Current direction ";
+      Util.print_endline 1 (Direction.direction_to_string d); 
+      Util.print_string 1 "Current hand ";
+      Util.print_endline 1 (Direction.hand_to_string h); 
+    in match map0.(cX).(cY),group.(cX).(cY) with
     | White,Some(g) ->
+        let _ =
+          Util.print_endline 1 "We are at a white codel";
+          Util.print_endline 1 "  (Direction seen before)";
+        in
         if Hashtbl.mem tab (g,d,h)
         then Hashtbl.find tab (g,d,h)
         else let wh,next_p = 
@@ -282,6 +291,10 @@ let next_cases map dir hand (cX,cY) =
         in (wh,0,next_p)
         (* = Hashtbl.find tab (g,d,h) *)
     | White,None ->
+        let _ =
+          Util.print_endline 1 "We are at a white codel";
+          Util.print_endline 1 "  (Not seen yet)";
+        in
         let gVal = !maxG in
         let    _ = maxG:=!maxG+1 ; group.(cX).(cY) <- Some(gVal) in
         let wh,next_p =
@@ -290,6 +303,10 @@ let next_cases map dir hand (cX,cY) =
         in (wh,0,next_p)
         (* = Hashtbl.find tab (g,d,h) *)
     | _,Some(g) ->
+        let _ =
+          Util.print_endline 1 "We are at a color codel";
+          Util.print_endline 1 "  (Seen before)";
+        in
         if Hashtbl.mem tab (g,d,h)
         then Hashtbl.find tab (g,d,h)
         else 
@@ -313,6 +330,10 @@ let next_cases map dir hand (cX,cY) =
         in let _ = Hashtbl.add tab (g,d,h) (wh,0,next_p)
         in (wh,blocksize,next_p)
     | _,None ->
+        let _ =
+          Util.print_endline 1 "We are at a color codel";
+          Util.print_endline 1 "  (Not seen yet)";
+        in
         let color_block = get_codel_block map cX cY in
         let blocksize = List.length color_block in
         let gVal = !maxG in
@@ -342,12 +363,29 @@ let next_cases map dir hand (cX,cY) =
           Hashtbl.add tab (gVal,d,h) (wh,blocksize,next_p)
         in ((wh,blocksize,next_p):memorized_data)
         (* = Hashtbl.find tab (g,d,h) *)
+
     in let rec find_direction = function
-      | [] -> None
+      | [] -> 
+          let _ =
+            Util.print_endline 1 "No direction has been found. Execution will terminate."
+          in
+          None
       | (d,h)::t -> 
+          let _ =
+            Util.print_string 1 "Trying with direction ";
+            Util.print_string 1 (Direction.direction_to_string d); 
+            Util.print_string 1 " and hand ";
+            Util.print_endline 1 (Direction.hand_to_string h); 
+          in
           begin match get_possibility (d,h) with
-          | (wh,bs,Some(x,y)) -> Some(wh,d,h,bs,x,y)
-          | (_,_,None) -> find_direction t
+          | (wh,bs,Some(x,y)) ->
+            let _ =
+              Util.print_endline 1 "Direction accepted";
+            in Some(wh,d,h,bs,x,y)
+          | (_,_,None) -> 
+            let _ =
+              Util.print_endline 1 "Direction rejected";
+              in find_direction t
           end
     in find_direction dir_and_hands
 

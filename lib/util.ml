@@ -3,7 +3,8 @@ let coord_list_to_string l =
     String.concat "" ["(";string_of_int i;",";string_of_int j;")"]
   in String.concat ";" (List.map coord_to_string l)
 
-let verb_level = 1
+let verb_level = 2
+let step_by_step = false
 
 let print_string  verb s  = 
   if verb <= verb_level
@@ -25,4 +26,3 @@ let print_newline verb () =
   then print_newline () 
   else ()
 
-let step_by_step = true
