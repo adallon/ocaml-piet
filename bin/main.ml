@@ -38,7 +38,7 @@ let main () =
   in ()
 
 let path = Sys.argv.(1);;
-let map = Codel_map.png_to_map path;;
+let map = Interpreter.png_to_map path;;
     (* Ocaml_piet.Codel_map.codel_map_example  *)
 (* print_string (Codel_map.codel_map_to_string map);*)
-let _ = main () in Codel_map.interpreter map;;
+let _ = main () in Interpreter.interpreter map;;
