@@ -6,7 +6,7 @@ let coord_list_to_string l =
   in String.concat ";" (List.map coord_to_string l)
 
 
-let verb_level = 2
+let verb_level = 3
 let step_by_step = true
 
 let print_string  verb s  = 

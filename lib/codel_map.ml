@@ -215,6 +215,9 @@ let codel_map_example =
 *)
 
 let get_codel_block map0 x y =
+  let _ =
+    Util.print_endline 2 "    Computing color block"
+  in
   let (map,group,_,_) = map0 in 
   let _ = assert(group.(x).(y) = None) in
   let codel = map.(x).(y) in
@@ -231,7 +234,10 @@ let get_codel_block map0 x y =
   in let candidates = all_vals [] xMax in
   let rec is_close (x,y) = function
     | [] -> false
-    | (x1,y1)::t -> (abs(x1-x) < 2 && abs(y1-y) < 2)||(is_close (x,y) t) 
+    | (x1,y1)::t -> 
+        (abs(x1-x) < 2 &&  y1 = y) || 
+        (abs(y1-y) < 2 &&  x1 = x) ||
+        (is_close (x,y) t) 
   in let rec find_close new_found remain_l target_l = function
     | [] -> new_found,remain_l
     | x::t -> 
@@ -245,7 +251,11 @@ let get_codel_block map0 x y =
     | [] ->  target
     | _ -> until_end remain_l (List.rev_append new_found target)
       
-  in until_end candidates [(x,y)]
+  in let l = until_end candidates [(x,y)]
+  in let _ =
+    Util.print_string 2 "      Found: ";
+    Util.print_endline 2 (Util.coord_list_to_string l);
+  in l
   (*
   let explored  = [(i,j)] in
 
