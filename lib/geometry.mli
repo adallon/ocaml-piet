@@ -22,4 +22,13 @@ module Direction : sig
   val furthest : Point.t list -> t -> Point.t list
 end
 
+module type MAP = sig
+  type t
+  type elt
+  val element_at : t -> int -> int -> elt 
+  val sizeX : t -> int
+  val sizeY : t -> int
+end
 
+module Map :
+  functor (_ : Codel.Basic) -> MAP

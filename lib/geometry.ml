@@ -97,14 +97,22 @@ module Direction = struct
     | a::t -> aux [a] a dir t
 end
 
-(*
 module type MAP = sig
   type t
   type elt
-  val element_at : int -> int -> elt 
+  val element_at : t -> int -> int -> elt 
   val sizeX : t -> int
   val sizeY : t -> int
 end
-*)
+
+module Map =
+  functor (Elt : Codel.Basic) -> 
+    struct
+      type t = Elt.t array array
+      type elt = Elt.t
+      let element_at m x y = m.(x).(y)
+      let sizeX m = Array.length m
+      let sizeY m = Array.length (m.(0)) 
+    end
 
 

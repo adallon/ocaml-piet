@@ -18,37 +18,6 @@ type codel_map =
    * See hashmemory.ml
    *)
 
-  (*
-let codel_transition p0 p1 map =
-  let map0,_,_,_ = map in
-  let c1 = map0.(Point.x p0).(Point.y p0) in
-  let c2 = map0.(Point.x p1).(Point.y p1) in
-  let _ = assert(c1 != c2) in 
-  (* c1 != c2 as we do not call the transition function
-    * when we go through a white codel *)
-  let c1_string = Codel.to_string c1 in
-  let c2_string = Codel.to_string c2 in
-  let _ =
-    Util.print_newline 0 ();
-    Util.print_string 0 (Point.to_string p0);
-    Util.print_string 0 ":";
-    Util.print_string 0 c1_string;
-    Util.print_string 0 " -> ";
-    Util.print_string 0 (Point.to_string p1);
-    Util.print_string 0 ":";
-    Util.print_string 0 c2_string;
-    Util.print_string 0 " ";
-    (* Util.print_newline 0 (); *)
-    (* next printing is the transition of the machine.
-     * See function next_state in machine.ml
-     * No endline necessary.
-     *)
-  in
-  match c1,c2 with
-  |White,_|_,White|Black,_|_,Black -> assert(false)
-  (* no transition with a non-colored block *)
-  |c1,c2 -> Codel.diff c1 c2
-  *)
 
 let codel_black_white map x y = 
   let map0,_,_,_ = map in
@@ -392,7 +361,3 @@ let interpreter map =
         in aux (map,p1,mach2)
   in let state0 = initial_state map
   in aux state0
-
-                
-
-
