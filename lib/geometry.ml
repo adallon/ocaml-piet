@@ -96,3 +96,13 @@ module Direction = struct
     | [] -> assert(false) (* no empty codel block *)
     | a::t -> aux [a] a dir t
 end
+
+module type MAP = sig
+  type t
+  type elt
+  val element_at : int -> int -> elt 
+  val sizeX : t -> int
+  val sizeY : t -> int
+end
+
+
