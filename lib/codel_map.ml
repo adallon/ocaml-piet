@@ -326,7 +326,7 @@ let next_cases map dir hand (cX,cY) =
             (* only one element at this point :
              * we are at a border of an edge. *)
           in let wh,next_p = 
-            get_next_coord true d outside_point
+            get_next_coord false d outside_point
         in let _ = Hashtbl.add tab (g,d,h) (wh,0,next_p)
         in (wh,blocksize,next_p)
     | _,None ->
