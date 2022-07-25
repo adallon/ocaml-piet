@@ -27,3 +27,13 @@ let print_newline verb () =
   then print_newline () 
   else ()
 
+module type Basic = sig
+  type t
+  (*
+  val to_string : t -> string
+  val to_int    : t -> int
+  val diff : t -> t -> int
+  *)
+end
+
+

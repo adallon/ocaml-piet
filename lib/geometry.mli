@@ -22,13 +22,15 @@ module Direction : sig
   val furthest : Point.t list -> t -> Point.t list
 end
 
-module type MAP = sig
+module type SQUARE = sig
   type t
   type elt
-  val element_at : t -> int -> int -> elt 
+  val element_at : t -> Point.t -> elt 
   val sizeX : t -> int
   val sizeY : t -> int
+  val inside: t -> Point.t -> bool
+  val set   : t -> Point.t -> elt -> t
+  val create : elt -> int -> int -> t
 end
 
-module Map :
-  functor (_ : Codel.Basic) -> MAP
+module Square : functor (_ : Util.Basic) -> SQUARE

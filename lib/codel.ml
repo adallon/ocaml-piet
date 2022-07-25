@@ -1,12 +1,3 @@
-module type Basic = sig
-  type t
-  (*
-  val to_string : t -> string
-  val to_int    : t -> int
-  val diff : t -> t -> int
-  *)
-end
-
 module Lightness =
   struct
     type t = Light | Normal | Dark
@@ -57,7 +48,7 @@ let to_string = function
 let diff c1 c2 =
   match c1,c2 with
   | White,_|_,White|Black,_|_,Black -> failwith("Codel.diff should not be used on black or white codels")
-  | Codel(h0,l0),Codel(h1,l1) -> Hue.diff h0 h1, Lightness.diff l0 l1
+  | Codel(h0,l0),Codel(h1,l1) -> (Hue.diff h0 h1, Lightness.diff l0 l1)
 
 let of_rgb r g b =
   match r,g,b with
@@ -91,3 +82,5 @@ let of_rgb r g b =
   |   _,  _,  _ -> White
 
 
+let is_white c = (c = White) 
+let is_black c = (c = Black)

@@ -7,4 +7,4 @@ type t =
   | InInt     | InChar  (* io : input  *)  
   | OutInt    | OutChar (* io : output *)
 
-val transition : int -> int -> t
+val transition : bool -> Codel.t -> Codel.t -> t

@@ -97,22 +97,44 @@ module Direction = struct
     | a::t -> aux [a] a dir t
 end
 
-module type MAP = sig
+module type SQUARE = sig
   type t
   type elt
-  val element_at : t -> int -> int -> elt 
+  val element_at : t -> Point.t -> elt 
   val sizeX : t -> int
   val sizeY : t -> int
+  val inside: t -> Point.t -> bool
+  val set   : t -> Point.t -> elt -> t
+  val create : elt -> int -> int -> t
 end
 
-module Map =
-  functor (Elt : Codel.Basic) -> 
+module Square =
+  functor (Elt : Util.Basic) -> 
     struct
       type t = Elt.t array array
       type elt = Elt.t
-      let element_at m x y = m.(x).(y)
+      let element_at m p = 
+        let x = Point.x p in
+        let y = Point.y p in
+        m.(x).(y)
       let sizeX m = Array.length m
       let sizeY m = Array.length (m.(0)) 
-    end
-
-
+      let inside m p = 
+        let x = Point.x p in
+        let y = Point.y p in
+        0 <= x && x < (sizeX m) && 0 <= y && y < (sizeY m)
+      let set m p e =
+        let x = Point.x p in
+        let y = Point.y p in
+        m.(x).(y) <- e; m 
+      let create e sizex sizey = 
+        let arr_map   = Array.make sizex [||] in
+        let rec aux = function
+          | 0 -> ()
+          | n -> 
+              begin 
+                arr_map.(n-1)   <- Array.make sizey e ; 
+                aux (n-1)
+              end
+        in aux sizex ; arr_map
+  end

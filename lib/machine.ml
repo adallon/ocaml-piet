@@ -280,7 +280,8 @@ module Stack_machine = struct
        * See codel_transition in codel_map.ml
       *)
     in let aux = function
-      | NoInst -> Util.print_endline 0 "NoInst"; machine
+      | NoInst -> 
+          Util.print_endline 0 "NoInst"; machine
       | Push -> 
         Util.print_string 0 "Push ";
         Util.print_int 0 prev_blocksize ;
@@ -351,14 +352,187 @@ module Stack_machine = struct
   in (nst,ndp,ncc)
 end
 
+(*
 type t= Stack_machine.t 
 let initial_state = Stack_machine.initial_state
 let next_state = Stack_machine.next_state
 let get_direction = Stack_machine.get_direction
 let get_hand = Stack_machine.get_hand
 let set = Stack_machine.set
-(*
-type t = Interpreter.codel_map * Point.t * Stack_machine.t 
-
-let initial_state map = (map,Point.to_point (0,0),Stack_machine.initial_state)
 *)
+
+type t = Codel_map.t * Point.t * Stack_machine.t 
+
+let initial_state map = 
+  (map,Point.to_point (0,0),Stack_machine.initial_state)
+
+  (*
+let get_direction (map,p,stack) = 
+  Stack_machine.get_direction stack
+let get_hand (map,p,stack) = Stack_machine.get_hand stack
+let set d h (map,p,stack) =(map,p,Stack_machine.set d h stack)
+*)
+
+let next_cases (map:Codel_map.t) (dir:Direction.t) (hand:Hand.t) (cur_p:Point.t) =
+  let map0,group,maxG,tab = map in
+
+  let get_next_coord wh d p =
+    let rec aux p0 wh p =
+      let px,py = (Point.x p,Point.y p) in
+      let not_black,white = Codel_map.codel_black_white map px py in
+      if white
+      (* the codel is white: we continue until we find a border,
+       * a colored block or a black codel *)
+      then aux p0 true (Direction.next_point p d)
+      else if not_black
+      (* it is neither white nor black: it is a colored block *)
+      then wh,Some(p)
+      else (* it is black or a border *)
+        if wh = false ||(p0 = p)
+        (* We were never at a white block, 
+         * or the direction is completely obstructed.
+         *)
+        then wh,None 
+        else true,Some(p0)
+    in aux p wh p 
+  
+  in let get_possibility (d,h) = 
+    let _ =
+      Util.print_string 1 "  Current direction ";
+      Util.print_endline 1 (Direction.to_string d); 
+      Util.print_string 1 "  Current hand ";
+      Util.print_endline 1 (Hand.to_string h); 
+    in let cX,cY = Point.x cur_p,Point.y cur_p
+    in match map0.(cX).(cY),group.(cX).(cY) with
+    | Codel.White,Some(_) ->
+        let _ =
+          Util.print_endline 1 "  We are at a white codel";
+          Util.print_endline 1 "    (Seen before)";
+        in let wh,next_p = 
+          get_next_coord true d (Direction.next_point cur_p d)
+        in (wh,0,next_p)
+    | Codel.White,None ->
+        let _ =
+          Util.print_endline 1 "  We are at a white codel";
+          Util.print_endline 1 "    (Not seen yet)";
+        in
+        let gVal = !maxG in
+        let    _ = maxG:=!maxG+1 ; group.(cX).(cY) <- Some(gVal) in
+        let wh,next_p =
+          get_next_coord true d (Direction.next_point cur_p d)
+        (* in let _ = Hashtbl.add tab (gVal,d,h) (wh,0,next_p) *)
+        in (wh,0,next_p)
+        (* = Hashtbl.find tab (g,d,h) *)
+    |Codel.Black,_ -> assert(false) (* we cannot be at a black codel *)
+    | _,Some(g) ->
+        let _ =
+          Util.print_endline 1 "  We are at a color codel";
+          Util.print_endline 1 "    (Color block seen before)";
+        in let size,corner = Hashmemory.get_corner tab g d h
+        in let wh,next_p = 
+          get_next_coord false d (Direction.next_point corner d)
+        in (wh,size,next_p)
+    | _,None ->
+        let _ =
+          Util.print_endline 1 "  We are at a color codel";
+          Util.print_endline 1 "    (Color block not seen yet)";
+        in
+        let color_block = Codel_map.get_codel_block map cur_p in
+        let blocksize = List.length color_block in
+        let gVal = !maxG in
+        let _ =
+          let rec aux = function
+            | [] -> maxG := !maxG+1
+            | p::t ->
+                let x,y = Point.x p,Point.y p in
+                begin group.(x).(y) <- Some(gVal) ; aux t end
+          in aux color_block
+        in 
+        let _ = Hashmemory.add_group tab gVal color_block blocksize in
+        let size,corner = Hashmemory.get_corner tab gVal d h in
+        let _ = assert(size = blocksize) in
+        let (wh,next_p) = get_next_coord false d (Direction.next_point corner d)
+        in (wh,size,next_p)
+
+    in let rec find_direction = function
+      | [] -> 
+          let _ =
+            Util.print_endline 1 "  No direction has been found. Execution will terminate."
+          in
+          None
+      | (d,h)::t -> 
+          let _ =
+            Util.print_string 1 " Trying with direction ";
+            Util.print_string 1 (Direction.to_string d); 
+            Util.print_string 1 " and hand ";
+            Util.print_endline 1 (Hand.to_string h); 
+            (*
+          in let _ = 
+            if Util.get_step_by_step ()
+            then let _ = print_string ">"; read_line () in ()
+            else ()
+            *)
+          in begin match get_possibility (d,h) with
+          | (wh,bs,Some(p)) ->
+            let _ =
+              Util.print_endline 1 "  Direction accepted";
+            in Some(wh,d,h,bs,p)
+          | (_,_,None) -> 
+            let _ =
+              Util.print_endline 1 "  Direction rejected";
+              in find_direction t
+          end
+
+    in let dir_and_hands =
+
+      let dir0 = dir in
+      let dir1 = Direction.rotate dir0 1 in
+      let dir2 = Direction.rotate dir1 1 in
+      let dir3 = Direction.rotate dir2 1 in
+      let hand0 = hand in
+      let hand1 = Hand.switch hand in
+      [dir0,hand0; dir0,hand1; dir1,hand1; dir1,hand0;
+       dir2,hand0; dir2,hand1; dir3,hand1; dir3,hand0]
+    in find_direction dir_and_hands
+
+let explorator (state:t) =
+  let map,cur_p,stack = state in
+  let dir  = Stack_machine.get_direction stack in
+  let hand = Stack_machine.get_hand stack in
+  match next_cases map dir hand cur_p with
+  | None -> None
+  | Some(wh,d,h,bs,p) -> 
+      let new_state = (map,p,Stack_machine.set d h stack)
+      in let _ = 
+        if Util.get_step_by_step ()
+        then let _ = print_string ">"; read_line () in ()
+        else () 
+      in Some(new_state,bs,wh)
+
+let step (state:t) =
+  let (map,p0,_) = state in
+  let trans_opt = explorator state in 
+  match trans_opt with
+  | None -> None
+  | Some(state1,blocksize,wh) ->
+    let (_,p1,stack1) = state1 in
+    let (map0,_,_,_) = map in 
+    let c0 = map0.(Point.x p0).(Point.y p0) in
+    let c1 = map0.(Point.x p1).(Point.y p1) in
+    let c0_string = Codel.to_string c0 in
+    let c1_string = Codel.to_string c1 in
+    let _ =
+      Util.print_newline 0 ();
+      Util.print_string 0 (Point.to_string p0);
+      Util.print_string 0 ":";
+      Util.print_string 0 c0_string;
+      Util.print_string 0 " -> ";
+      Util.print_string 0 (Point.to_string p1);
+      Util.print_string 0 ":";
+      Util.print_string 0 c1_string;
+      Util.print_string 0 " ";
+    in
+    let stack2 = 
+      Stack_machine.next_state stack1 blocksize (Instructions.transition wh c0 c1)
+    in Some((map,p1,stack2))
+
