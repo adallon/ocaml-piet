@@ -97,36 +97,45 @@ module Direction = struct
     | a::t -> aux [a] a dir t
 end
 
-module type SQUARE = sig
+(*
+module type RECTANGLE = sig
   type t
   type elt
-  val element_at : t -> Point.t -> elt 
+  val element_at : t -> Point.t -> elt
   val sizeX : t -> int
   val sizeY : t -> int
   val inside: t -> Point.t -> bool
-  val set   : t -> Point.t -> elt -> t
+  val set   : t -> Point.t -> elt -> unit
   val create : elt -> int -> int -> t
+  val iter : (Point.t -> elt -> unit) -> t -> unit
 end
+*)
 
-module Square =
+module Rectangle =
   functor (Elt : Util.Basic) -> 
     struct
+      
       type t = Elt.t array array
       type elt = Elt.t
+      
       let element_at m p = 
         let x = Point.x p in
         let y = Point.y p in
         m.(x).(y)
+      
       let sizeX m = Array.length m
       let sizeY m = Array.length (m.(0)) 
+      
       let inside m p = 
         let x = Point.x p in
         let y = Point.y p in
         0 <= x && x < (sizeX m) && 0 <= y && y < (sizeY m)
+      
       let set m p e =
         let x = Point.x p in
         let y = Point.y p in
-        m.(x).(y) <- e; m 
+        m.(x).(y) <- e
+      
       let create e sizex sizey = 
         let arr_map   = Array.make sizex [||] in
         let rec aux = function
@@ -136,5 +145,19 @@ module Square =
                 arr_map.(n-1)   <- Array.make sizey e ; 
                 aux (n-1)
               end
-        in aux sizex ; arr_map
+        in aux sizex; arr_map
+
+      let iter f map = 
+        let rec apply_f_x x = function
+          | 0 -> ()
+          | n -> 
+            begin 
+              f (Point.to_point (x,n-1)) (map.(x).(n-1)) ; 
+              apply_f_x x (n-1) 
+            end
+        in let rec apply_f = function
+          | 0 -> ()
+          | n -> begin apply_f_x (n-1) (sizeY map) ; apply_f (n-1) end
+        in let _ = apply_f (sizeX map) in ()
+
   end

@@ -1,13 +1,17 @@
 open Geometry
 
-type t = 
-  (Codel.t array array) *
-  (int option array array) * 
-  int ref * Hashmemory.t
+module CR = Rectangle(Codel)
+
+module IOR = 
+  Rectangle (struct 
+    type t = int option 
+  end)
+
+type t = CR.t * IOR.t * int ref * Hashmemory.t
 
   (*
-   *the codel array array represents the codel map
-   *the int option array array represents the block numbers
+   *the codel rectangle represents the codel map
+   *the int option rectangle represents the block numbers
    of the codels once it is set
    *the int represents the current max block number
    * the hashmemory is used to memorize block info to avoid costly
@@ -15,43 +19,32 @@ type t =
    * See hashmemory.ml
    *)
 
-let codel_black_white map x y = 
+let black_white map p = 
   let map0,_,_,_ = map in
-  let maxX = Array.length map0 in
-  let maxY = Array.length map0.(0) in
   let is_not_black = 
-    x>=0 && x < maxX && y >= 0 && y < maxY && map0.(x).(y) != Codel.Black
+    (CR.inside map0 p) && not(Codel.is_black (CR.element_at map0 p))
   in let is_white =
-    x>=0 && x < maxX && y >= 0 && y < maxY && map0.(x).(y) = Codel.White
+    (CR.inside map0 p) && (Codel.is_white (CR.element_at map0 p))
   in is_not_black,is_white
 
+let create nx ny =
+  let cmap =  CR.create Codel.Black nx ny in
+  let gmap = IOR.create None        nx ny in
+  (cmap,gmap,ref 0,Hashmemory.create (nx*ny))
 
-let codel_map_create nx ny =
-  let arr_map   = Array.make nx [||] in
-  let arr_group = Array.make nx [||] in
-  let rec aux = function
-    | 0 -> ()
-    | n -> 
-        begin 
-          arr_map.(n-1)   <- Array.make ny Codel.Black ; 
-          arr_group.(n-1) <- Array.make ny None ;
-          aux (n-1)
-        end
-  in let _ = aux nx in (arr_map,arr_group,ref 0,Hashmemory.create (nx*ny))
-
-let codel_map_to_string codel_map =
+let to_string codel_map =
   let map0,_,_,_ = codel_map in
-  let indexesX = List.init (Array.length map0)     (fun i -> i) 
-  in 
-  let indexesY = List.init (Array.length map0.(0)) (fun i -> i) 
-  in 
+  let indexesX = List.init (CR.sizeX map0) (fun i -> i) in 
+  let indexesY = List.init (CR.sizeY map0) (fun i -> i) in 
   let get_line y = 
-    let l =
-      List.map (fun x -> Codel.to_string map0.(x).(y)) indexesX 
+    let f x =
+      Codel.to_string (CR.element_at map0 (Point.to_point (x,y)))
+    in let l =
+      List.map f indexesX 
     in String.concat "." l
   in String.concat "\n" (List.map get_line indexesY)
 
-let png_to_map fpath =
+let of_png fpath =
  let ich = open_in fpath in
  let rec read_file res ic =
   try let l = input_line ic in read_file (l::res) ic
@@ -60,18 +53,14 @@ let png_to_map fpath =
  in let file_as_str = read_file [] ich
  (* in let _ = close_in ich *)
  in let img = ImagePNG.parsefile (ImageUtil.chunk_reader_of_string file_as_str)
- in let (map,group,maxG,tab) = 
-   codel_map_create img.width img.height
+ in let (map,group,maxG,tab) = create img.width img.height
  in let f x y r g b =
-   let c = Codel.of_rgb r g b in let _ = map.(x).(y) <- c in ()
- in let g x y = Image.read_rgb img x y (f x y) 
- in let rec apply_g_x x = function
-   | 0 -> ()
-   | n -> begin g x (n-1) ; apply_g_x x (n-1) end
- in let rec apply_g = function
-   | 0 -> ()
-   | n -> begin apply_g_x (n-1) img.height ; apply_g (n-1) end
- in let _ = apply_g img.width
+   let c = Codel.of_rgb r g b 
+   in let _ = CR.set map (Point.to_point (x,y)) c 
+   in ()
+ in let g p _ = 
+   let x,y = Point.x p, Point.y p in Image.read_rgb img x y (f x y) 
+ in let _ = CR.iter g map
  in (map,group,maxG,tab)
 
 
@@ -104,22 +93,21 @@ let get_codel_block map0 p =
   in
   let (map,group,_,_) = map0 in 
   let x,y = Point.x p,Point.y p in
-  let _ = assert(group.(x).(y) = None) in
-  let codel = map.(x).(y) in
-  let xMax = Array.length map in
-  let yMax = Array.length map.(0) in
+  let _ = assert(IOR.element_at group p = None) in
+  let codel = CR.element_at map p in
   let rec line res i = function
     | 0 -> res
     | j -> 
-        if (codel = map.(i).(j-1)) 
-        && (group.(i).(j-1) = None) && 
+        let pij = Point.to_point (i,j-1) in
+        if (codel = CR.element_at map pij) 
+        && (IOR.element_at group pij = None) && 
         (i != x || j-1!= y) 
            then line ((Point.to_point (i,j-1))::res) i (j-1)
            else line res i (j-1)
   in let rec all_vals res = function
     | 0 -> res
-    | i -> all_vals (line res (i-1) yMax) (i-1) 
-  in let candidates = all_vals [] xMax 
+    | i -> all_vals (line res (i-1) (CR.sizeY map)) (i-1) 
+  in let candidates = all_vals [] (CR.sizeX map)
   in let rec find_close new_found remain_l target_l = function
     | [] -> new_found,remain_l
     | x::t -> 

@@ -361,7 +361,7 @@ let get_hand = Stack_machine.get_hand
 let set = Stack_machine.set
 *)
 
-type t = Codel_map.t * Point.t * Stack_machine.t 
+type t = Program.t * Point.t * Stack_machine.t 
 
 let initial_state map = 
   (map,Point.to_point (0,0),Stack_machine.initial_state)
@@ -373,13 +373,12 @@ let get_hand (map,p,stack) = Stack_machine.get_hand stack
 let set d h (map,p,stack) =(map,p,Stack_machine.set d h stack)
 *)
 
-let next_cases (map:Codel_map.t) (dir:Direction.t) (hand:Hand.t) (cur_p:Point.t) =
+let next_cases (map:Program.t) (dir:Direction.t) (hand:Hand.t) (cur_p:Point.t) =
   let map0,group,maxG,tab = map in
 
   let get_next_coord wh d p =
     let rec aux p0 wh p =
-      let px,py = (Point.x p,Point.y p) in
-      let not_black,white = Codel_map.codel_black_white map px py in
+      let not_black,white = Program.black_white map p in
       if white
       (* the codel is white: we continue until we find a border,
        * a colored block or a black codel *)
@@ -402,8 +401,10 @@ let next_cases (map:Codel_map.t) (dir:Direction.t) (hand:Hand.t) (cur_p:Point.t)
       Util.print_endline 1 (Direction.to_string d); 
       Util.print_string 1 "  Current hand ";
       Util.print_endline 1 (Hand.to_string h); 
-    in let cX,cY = Point.x cur_p,Point.y cur_p
-    in match map0.(cX).(cY),group.(cX).(cY) with
+    in let c,g_op =
+      (Program.CR.element_at  map0  cur_p), 
+      (Program.IOR.element_at group cur_p)
+    in match c, g_op  with
     | Codel.White,Some(_) ->
         let _ =
           Util.print_endline 1 "  We are at a white codel";
@@ -417,7 +418,10 @@ let next_cases (map:Codel_map.t) (dir:Direction.t) (hand:Hand.t) (cur_p:Point.t)
           Util.print_endline 1 "    (Not seen yet)";
         in
         let gVal = !maxG in
-        let    _ = maxG:=!maxG+1 ; group.(cX).(cY) <- Some(gVal) in
+        let    _ = 
+          maxG:=!maxG+1 ; 
+          Program.IOR.set group cur_p (Some gVal)
+        in
         let wh,next_p =
           get_next_coord true d (Direction.next_point cur_p d)
         (* in let _ = Hashtbl.add tab (gVal,d,h) (wh,0,next_p) *)
@@ -437,15 +441,15 @@ let next_cases (map:Codel_map.t) (dir:Direction.t) (hand:Hand.t) (cur_p:Point.t)
           Util.print_endline 1 "  We are at a color codel";
           Util.print_endline 1 "    (Color block not seen yet)";
         in
-        let color_block = Codel_map.get_codel_block map cur_p in
+        let color_block = Program.get_codel_block map cur_p in
         let blocksize = List.length color_block in
         let gVal = !maxG in
         let _ =
           let rec aux = function
             | [] -> maxG := !maxG+1
             | p::t ->
-                let x,y = Point.x p,Point.y p in
-                begin group.(x).(y) <- Some(gVal) ; aux t end
+                begin Program.IOR.set group p (Some gVal); aux t end
+
           in aux color_block
         in 
         let _ = Hashmemory.add_group tab gVal color_block blocksize in
@@ -517,8 +521,8 @@ let step (state:t) =
   | Some(state1,blocksize,wh) ->
     let (_,p1,stack1) = state1 in
     let (map0,_,_,_) = map in 
-    let c0 = map0.(Point.x p0).(Point.y p0) in
-    let c1 = map0.(Point.x p1).(Point.y p1) in
+    let c0 = Program.CR.element_at map0 p0 in
+    let c1 = Program.CR.element_at map0 p1 in
     let c0_string = Codel.to_string c0 in
     let c1_string = Codel.to_string c1 in
     let _ =

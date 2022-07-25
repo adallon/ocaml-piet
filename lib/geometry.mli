@@ -22,15 +22,15 @@ module Direction : sig
   val furthest : Point.t list -> t -> Point.t list
 end
 
-module type SQUARE = sig
+module Rectangle : functor (Elt : Util.Basic) ->  sig
   type t
-  type elt
-  val element_at : t -> Point.t -> elt 
+  type elt = Elt.t
+  val element_at : t -> Point.t -> elt
   val sizeX : t -> int
   val sizeY : t -> int
   val inside: t -> Point.t -> bool
-  val set   : t -> Point.t -> elt -> t
+  val set   : t -> Point.t -> elt -> unit
   val create : elt -> int -> int -> t
+  val iter : (Point.t -> elt -> unit) -> t -> unit
 end
 
-module Square : functor (_ : Util.Basic) -> SQUARE
