@@ -3,6 +3,7 @@ module Point : sig
   val to_point : int * int -> t
   val x : t -> int
   val y : t -> int
+  val equal: t -> t -> bool
   val is_close: t -> t list -> bool
   val to_string: t -> string
 end

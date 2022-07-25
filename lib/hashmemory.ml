@@ -26,12 +26,17 @@ let get_corner tab g d h =
       | Hand.Left  -> size,left
       | Hand.Right -> size,right
     else
-      let edge = Direction.furthest block d in
-      let left_dir  = Direction.rotate d (-1) in
-      let right_dir = Direction.rotate d  1   in
-      let (left_point,right_point) = 
-        let l = Direction.furthest edge left_dir  in
-        let r = Direction.furthest edge right_dir in
+      let edge = 
+        Direction.furthest block d 
+      in let left_dir  = Direction.rotate d (-1)
+      in let right_dir = Direction.rotate d (-1)
+      in let (left_point,right_point) = 
+        let l = 
+          Direction.furthest edge left_dir  
+        in
+        let r = 
+          Direction.furthest edge right_dir 
+        in
         match l,r with
             | [coord_l],[coord_r] -> coord_l,coord_r
             | _,_ -> assert(false) 

@@ -18,14 +18,21 @@ type t = CR.t * IOR.t * int ref * Hashmemory.t
    * computings.
    * See hashmemory.ml
    *)
+let inside (m,_,_,_) = CR.inside m
+let sizeX (m,_,_,_) = CR.sizeX m
+let sizeY (m,_,_,_) = CR.sizeY m
+let undefined (_,g,_,_) p = (IOR.element_at g p = None)
+let choose f prog =
+  let rec line res i = function
+    | 0 -> res
+    | j ->
+        let pij = Point.to_point  (i,j-1) in 
+        if f prog pij then line (pij::res) i (j-1) else line res i (j-1)
+  in let rec all_vals res = function
+    | 0 -> res
+    | i -> all_vals (line res (i-1) (sizeY prog)) (i-1) 
+  in all_vals [] (sizeX prog)
 
-let black_white map p = 
-  let map0,_,_,_ = map in
-  let is_not_black = 
-    (CR.inside map0 p) && not(Codel.is_black (CR.element_at map0 p))
-  in let is_white =
-    (CR.inside map0 p) && (Codel.is_white (CR.element_at map0 p))
-  in is_not_black,is_white
 
 let create nx ny =
   let cmap =  CR.create Codel.Black nx ny in
@@ -51,7 +58,7 @@ let of_png fpath =
   with
   | End_of_file -> String.concat "\n" (List.rev res)
  in let file_as_str = read_file [] ich
- (* in let _ = close_in ich *)
+ in let _ = close_in ich 
  in let img = ImagePNG.parsefile (ImageUtil.chunk_reader_of_string file_as_str)
  in let (map,group,maxG,tab) = create img.width img.height
  in let f x y r g b =
@@ -87,27 +94,20 @@ let codel_map_example =
   in arr
 *)
 
-let get_codel_block map0 p =
+let get_codel_block prog p =
   let _ =
     Util.print_endline 2 "    Computing color block"
   in
-  let (map,group,_,_) = map0 in 
-  let x,y = Point.x p,Point.y p in
+  let (map,group,_,_) = prog in 
   let _ = assert(IOR.element_at group p = None) in
   let codel = CR.element_at map p in
-  let rec line res i = function
-    | 0 -> res
-    | j -> 
-        let pij = Point.to_point (i,j-1) in
-        if (codel = CR.element_at map pij) 
-        && (IOR.element_at group pij = None) && 
-        (i != x || j-1!= y) 
-           then line ((Point.to_point (i,j-1))::res) i (j-1)
-           else line res i (j-1)
-  in let rec all_vals res = function
-    | 0 -> res
-    | i -> all_vals (line res (i-1) (CR.sizeY map)) (i-1) 
-  in let candidates = all_vals [] (CR.sizeX map)
+
+  let choice prog pij =
+    (codel = CR.element_at map pij)
+    && (undefined prog pij) && not(Point.equal pij p)
+
+  in let candidates = choose choice prog
+  
   in let rec find_close new_found remain_l target_l = function
     | [] -> new_found,remain_l
     | x::t -> 
@@ -126,38 +126,4 @@ let get_codel_block map0 p =
     Util.print_string  2 "      Found: ";
     Util.print_endline 2 (String.concat ";" (List.map Point.to_string l));
   in l
-  (*
-  let explored  = [(i,j)] in
-
-  let add_if_not_in seen new_xplr a =
-    if List.mem a seen
-    then new_xplr
-    else a::new_xplr
-  
-  in let adj (i,j) =
-    let lx = Array.length map in
-    let ly = Array.length map.(0) in
-    let adj_l = [(i+1,j);(i-1,j);(i,j+1);(i,j-1)] in
-    let rec remove_outside = function
-      | [] -> []
-      | (a,b)::t when a < 0 || a >= lx || b<0 || b>= ly -> 
-          remove_outside t
-      | (a,b)::t when map.(a).(b) = map.(i).(j) -> 
-          (a,b)::(remove_outside t)
-      | (_,_)::t -> remove_outside t 
-    in remove_outside adj_l
-  
-  in let rec explorator seen new_exploring = function
-    | [] -> (seen,new_exploring)
-    | a::l -> 
-        let adj_a = adj a in 
-        let new_exploring = List.fold_left (add_if_not_in seen) new_exploring adj_a
-        in explorator (if List.mem a seen then seen else a::seen) new_exploring l
-  in let rec aux explored exploring =
-    let explored,exploring = explorator explored [] exploring
-    in match exploring with
-    | [] -> explored
-    | exploring -> aux explored exploring
-  in aux explored explored
-  *)
 

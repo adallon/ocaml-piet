@@ -7,7 +7,7 @@ module Point = struct
   let x (a,_) = a
   let y (_,b) = b
 
-
+  let equal (x0,y0) (x1,y1) =  x0 = x1 && y0 = y1
   let rec is_close (x,y) = function
     | [] -> false
     | (x1,y1)::t -> 

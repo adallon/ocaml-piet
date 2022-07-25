@@ -2,35 +2,15 @@ module CR : sig
   type t
   type elt = Codel.t
   val element_at : t -> Geometry.Point.t -> elt
-  val sizeX : t -> int
-  val sizeY : t -> int
-  val inside: t -> Geometry.Point.t -> bool
   val set   : t -> Geometry.Point.t -> elt -> unit
-  val create : elt -> int -> int -> t
-  val iter : (Geometry.Point.t -> elt -> unit) -> t -> unit
 end
-
-(*
-val elt_of_codel: Codel.t -> CR.t
-val elt_to_codel: CR.t -> Codel.t
-*)
 
 module IOR : sig
   type t
   type elt = int option
   val element_at : t -> Geometry.Point.t -> elt
-  val sizeX : t -> int
-  val sizeY : t -> int
-  val inside: t -> Geometry.Point.t -> bool
   val set   : t -> Geometry.Point.t -> elt -> unit
-  val create : elt -> int -> int -> t
-  val iter : (Geometry.Point.t -> elt -> unit) -> t -> unit
 end
-
-(*
-val elt_of_intopt: int option -> IOR.elt
-val elt_to_intopt: IOR.elt  -> int option
-*)
 
 type t = 
   CR.t * IOR.t * int ref * Hashmemory.t
@@ -45,7 +25,7 @@ type t =
    * See hashmemory.ml
    *)
 
-val black_white: t -> Geometry.Point.t -> bool * bool
+val inside : t -> Geometry.Point.t -> bool
 val to_string : t -> string
 val of_png: string -> t
 val get_codel_block: t -> Geometry.Point.t -> Geometry.Point.t list

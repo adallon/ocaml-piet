@@ -373,17 +373,23 @@ let get_hand (map,p,stack) = Stack_machine.get_hand stack
 let set d h (map,p,stack) =(map,p,Stack_machine.set d h stack)
 *)
 
-let next_cases (map:Program.t) (dir:Direction.t) (hand:Hand.t) (cur_p:Point.t) =
-  let map0,group,maxG,tab = map in
+let next_cases (prog:Program.t) (dir:Direction.t) (hand:Hand.t) (cur_p:Point.t) =
+  let map0,group,maxG,tab = prog in
 
   let get_next_coord wh d p =
     let rec aux p0 wh p =
-      let not_black,white = Program.black_white map p in
-      if white
+      let black,white =
+        if Program.inside prog p 
+        then 
+          let c = Program.CR.element_at map0 p in
+          Codel.is_black c, Codel.is_white c
+        else true,false
+        (* the outside is handled as black cases *)
+      in if white
       (* the codel is white: we continue until we find a border,
        * a colored block or a black codel *)
       then aux p0 true (Direction.next_point p d)
-      else if not_black
+      else if not(black)
       (* it is neither white nor black: it is a colored block *)
       then wh,Some(p)
       else (* it is black or a border *)
@@ -441,7 +447,7 @@ let next_cases (map:Program.t) (dir:Direction.t) (hand:Hand.t) (cur_p:Point.t) =
           Util.print_endline 1 "  We are at a color codel";
           Util.print_endline 1 "    (Color block not seen yet)";
         in
-        let color_block = Program.get_codel_block map cur_p in
+        let color_block = Program.get_codel_block prog cur_p in
         let blocksize = List.length color_block in
         let gVal = !maxG in
         let _ =
