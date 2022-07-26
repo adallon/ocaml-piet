@@ -7,13 +7,13 @@ module IOR =
     type t = int option 
   end)
 
-type t = CR.t * IOR.t * int ref * Hashmemory.t
+type t = CR.t * IOR.t * int ref * Hashmemory.t 
 
   (*
-   *the codel rectangle represents the codel map
-   *the int option rectangle represents the block numbers
-   of the codels once it is set
-   *the int represents the current max block number
+   * the codel rectangle represents the codel map
+   * the int option rectangle represents the block numbers
+   *     of the codels once it is set
+   * the int represents the current max block number
    * the hashmemory is used to memorize block info to avoid costly
    * computings.
    * See hashmemory.ml
@@ -22,7 +22,7 @@ let inside (m,_,_,_) = CR.inside m
 let codel_at (m,_,_,_) = CR.element_at m
 let group_at (_,g,_,_) = IOR.element_at g
 let get_new_g (_,_,maxG,_) =
-  let g = !maxG in let _ = maxG := !maxG+1 in g
+    let g = !maxG in let _ = maxG := !maxG+1 in g
 let set_group (_,gp,_,_) p g  =
   let _ = IOR.set gp p (Some g) in ()
 

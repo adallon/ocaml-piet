@@ -362,26 +362,10 @@ module Stack_machine :
   in (nst,ndp,ncc)
 end
 
-(*
-type t= Stack_machine.t 
-let initial_state = Stack_machine.initial_state
-let next_state = Stack_machine.next_state
-let get_direction = Stack_machine.get_direction
-let get_hand = Stack_machine.get_hand
-let set = Stack_machine.set
-*)
-
-type t = Program.t * Point.t * Stack_machine.t 
+type t = Next_position.Memory.t * Point.t * Stack_machine.t 
 
 let initial_state prog = 
-  (prog,Point.to_point (0,0),Stack_machine.initial_state)
-
-  (*
-let get_direction (map,p,stack) = 
-  Stack_machine.get_direction stack
-let get_hand (map,p,stack) = Stack_machine.get_hand stack
-let set d h (map,p,stack) =(map,p,Stack_machine.set d h stack)
-*)
+  ((Next_position.Memory.create prog),Point.to_point (0,0),Stack_machine.initial_state)
 
 let explorator (state:t) =
   let prog,cur_p,stack = state in
@@ -390,11 +374,11 @@ let explorator (state:t) =
   match Next_position.find prog dir hand cur_p with
   | None -> None
   | Some(next_pos) -> 
-      let wh   = Next_position.seen_white next_pos in
-      let dir  = Next_position.direction  next_pos in
-      let hand = Next_position.hand       next_pos in
-      let bs   = Next_position.blocksize  next_pos in
-      let p    = Next_position.point      next_pos in
+      let wh   = Next_position.Result.seen_white next_pos in
+      let dir  = Next_position.Result.direction  next_pos in
+      let hand = Next_position.Result.hand       next_pos in
+      let bs   = Next_position.Result.blocksize  next_pos in
+      let p    = Next_position.Result.point      next_pos in
       let new_state = (prog,p,Stack_machine.set dir hand stack)
       in let _ = 
         if Util.get_step_by_step ()
@@ -402,13 +386,14 @@ let explorator (state:t) =
         else () 
       in Some((new_state:t),bs,wh)
 
-let step (state:t) =
-  let (prog,p0,_) = state in
+let step state =
+  let (mem,p0,_) = state in
   let trans_opt = explorator state in 
   match trans_opt with
   | None -> None
   | Some(state1,blocksize,wh) ->
     let (_,p1,(stack1:Stack_machine.t)) = (state1:t) in
+    let prog = Next_position.Memory.get_prog mem in
     let c0 = Program.codel_at prog p0 in
     let c1 = Program.codel_at prog p1 in
     let c0_string = Codel.to_string c0 in
@@ -425,12 +410,12 @@ let step (state:t) =
       Util.print_string 0 " ";
     in let stack2 = 
       Stack_machine.next_state stack1 blocksize (Instructions.transition wh c0 c1)
-    in Some((prog,p1,stack2))
+    in Some((mem,p1,stack2))
 
 let interpreter prog =
   let rec aux state =
     match step state with
     | None -> Util.print_string 0 "\nEnd of execution\n"
-    | Some(state) -> aux (state)
+    | Some(state) -> aux state
   in let state = initial_state prog
   in aux state

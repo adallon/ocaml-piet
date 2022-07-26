@@ -30,7 +30,9 @@ type t (* =
 val inside  : t -> Geometry.Point.t -> bool
 val codel_at: t -> Geometry.Point.t -> Codel.t
 val group_at: t -> Geometry.Point.t -> int option
-val get_new_g : t -> int
+val sizeX : t -> int
+val sizeY : t -> int
+val get_new_g: t -> int
 val set_group : t -> Geometry.Point.t -> int -> unit
 val to_string : t -> string
 val of_png: string -> t
