@@ -13,10 +13,18 @@ type config =
   mutable filename: string option}
 
 let init_config = {steps = false ; verbosity = 0; filename = None}
-let trace config () = config.verbosity <- 1
+let trace config () = 
+    if (config.verbosity = 0)
+    then config.verbosity <- 1
+    else ()
+let debug config () = 
+    if (config.verbosity < 2)
+    then config.verbosity <- 2
+    else ()
+let verbose config () =  config.verbosity <- 1000 (* max verbosity *)
 let interactive config () = 
   let _ =
-    trace config () ; config.steps <- true
+    config.steps <- true;
   in ()
 
 
@@ -26,6 +34,8 @@ let main () =
       [
       ("-t", Arg.Unit (trace config), "Prints the execution trace. Same as -v 1");
       ("-i",Arg.Unit (interactive config), "Stops after each execution step. Useful for debugging. Automatically sets -t");
+      ("--debug",Arg.Unit (debug config), "Print debugging information for ocaml-piet");
+      ("--verbose",Arg.Unit (verbose config), "Maximal verbosity");
       ("--version", Arg.Unit (fun () -> print_string version ; raise End ), "Print version number" );
       ]
     in let usage_message = "./ocaml-piet.exe file [options]"

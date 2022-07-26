@@ -29,7 +29,7 @@ let get_corner tab g d h =
       let edge = 
         Direction.furthest block d 
       in let left_dir  = Direction.rotate d (-1)
-      in let right_dir = Direction.rotate d (-1)
+      in let right_dir = Direction.rotate d ( 1)
       in let (left_point,right_point) = 
         let l = 
           Direction.furthest edge left_dir  

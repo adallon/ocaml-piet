@@ -95,9 +95,7 @@ let codel_map_example =
 *)
 
 let get_codel_block prog p =
-  let _ =
-    Util.print_endline 2 "    Computing color block"
-  in
+  let _ = Util.print_endline 2 "    Computing color block" in
   let (map,group,_,_) = prog in 
   let _ = assert(IOR.element_at group p = None) in
   let codel = CR.element_at map p in
@@ -107,6 +105,10 @@ let get_codel_block prog p =
     && (undefined prog pij) && not(Point.equal pij p)
 
   in let candidates = choose choice prog
+  in let _ =
+    let l_str = List.map Point.to_string candidates in
+    Util.print_string 3 "candidates: ";
+    Util.print_endline 3 (String.concat ";" l_str)
   
   in let rec find_close new_found remain_l target_l = function
     | [] -> new_found,remain_l
@@ -116,7 +118,11 @@ let get_codel_block prog p =
         else find_close new_found (x::remain_l) target_l t
 
   in let rec until_end candidates target =
-    let new_found,remain_l = find_close [] [] target candidates
+    let _ =
+      let l_str = List.map Point.to_string candidates in
+      Util.print_string 3 "target: ";
+      Util.print_endline 3 (String.concat ";" l_str)
+    in let new_found,remain_l = find_close [] [] target candidates
     in match new_found with
     | [] ->  target
     | _ -> until_end remain_l (List.rev_append new_found target)
