@@ -7,7 +7,7 @@ module IOR =
     type t = int option 
   end)
 
-type t = CR.t * IOR.t  (* int ref * Hashmemory.t *)
+type t = CR.t * IOR.t  
 
   (*
    * the codel rectangle represents the codel map
@@ -17,10 +17,6 @@ type t = CR.t * IOR.t  (* int ref * Hashmemory.t *)
 let inside (m,_) = CR.inside m
 let codel_at (m,_) = CR.element_at m
 let group_at (_,g) = IOR.element_at g
-(*
-let get_new_g (_,_,maxG,_) =
-    let g = !maxG in let _ = maxG := !maxG+1 in g
-*)
 let set_group (_,gp) p g  =
   let _ = IOR.set gp p (Some g) in ()
 
@@ -114,15 +110,3 @@ let get_codel_block prog p =
     Util.print_endline 2 (String.concat ";" (List.map Point.to_string l));
   in l
 
-(*
-let get_corner prog g d h = 
-  let (_,_,_,tab) = prog in 
-  let (_,c) = Hashmemory.get_corner tab g d h
-  in c
-
-let get_group_size prog g = 
-  let (_,_,_,tab) = prog in Hashmemory.get_group_size tab g 
-
-let add_group (_,_,_,tab) g codel_block size =
-  Hashmemory.add_group tab g codel_block size
-  *)
