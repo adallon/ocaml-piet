@@ -13,6 +13,9 @@ let create n = Hashtbl.create n
 let add_group tab g block size =
   Hashtbl.add tab g (block,size,Hashtbl.create 4)
 
+let get_group_size tab g =
+  let _,bs,_ = Hashtbl.find tab g in bs
+
 let get_corner tab g d h =
   if Hashtbl.mem tab g
   then

@@ -387,10 +387,15 @@ let explorator (state:t) =
   let prog,cur_p,stack = state in
   let dir  = Stack_machine.get_direction stack in
   let hand = Stack_machine.get_hand stack in
-  match Program.next_codel prog dir hand cur_p with
+  match Next_position.find prog dir hand cur_p with
   | None -> None
-  | Some(wh,d,h,bs,p) -> 
-      let new_state = (prog,p,Stack_machine.set d h stack)
+  | Some(next_pos) -> 
+      let wh   = Next_position.seen_white next_pos in
+      let dir  = Next_position.direction  next_pos in
+      let hand = Next_position.hand       next_pos in
+      let bs   = Next_position.blocksize  next_pos in
+      let p    = Next_position.point      next_pos in
+      let new_state = (prog,p,Stack_machine.set dir hand stack)
       in let _ = 
         if Util.get_step_by_step ()
         then let _ = print_string ">"; read_line () in ()
@@ -418,8 +423,7 @@ let step (state:t) =
       Util.print_string 0 ":";
       Util.print_string 0 c1_string;
       Util.print_string 0 " ";
-    in
-    let stack2 = 
+    in let stack2 = 
       Stack_machine.next_state stack1 blocksize (Instructions.transition wh c0 c1)
     in Some((prog,p1,stack2))
 

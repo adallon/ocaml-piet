@@ -27,8 +27,14 @@ type t (* =
    * See hashmemory.ml
    *)
 
-val inside : t -> Geometry.Point.t -> bool
+val inside  : t -> Geometry.Point.t -> bool
 val codel_at: t -> Geometry.Point.t -> Codel.t
+val group_at: t -> Geometry.Point.t -> int option
+val get_new_g : t -> int
+val set_group : t -> Geometry.Point.t -> int -> unit
 val to_string : t -> string
 val of_png: string -> t
-val next_codel: t -> Geometry.Direction.t -> Geometry.Hand.t -> Geometry.Point.t -> (bool * Geometry.Direction.t  * Geometry.Hand.t * int * Geometry.Point.t) option
+val get_codel_block : t -> Geometry.Point.t -> Geometry.Point.t list
+val get_group_size : t -> int -> int
+val add_group: t -> int -> Geometry.Point.t list -> int -> unit
+val get_corner : t -> int -> Geometry.Direction.t -> Geometry.Hand.t -> Geometry.Point.t
