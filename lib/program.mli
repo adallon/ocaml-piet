@@ -1,3 +1,4 @@
+(*
 module CR : sig
   type t
   type elt = Codel.t
@@ -11,9 +12,10 @@ module IOR : sig
   val element_at : t -> Geometry.Point.t -> elt
   val set   : t -> Geometry.Point.t -> elt -> unit
 end
+*)
 
-type t = 
-  CR.t * IOR.t * int ref * Hashmemory.t
+type t (* = 
+  CR.t * IOR.t * int ref * Hashmemory.t *)
 
   (*
    *the codel array array represents the codel map
@@ -26,6 +28,7 @@ type t =
    *)
 
 val inside : t -> Geometry.Point.t -> bool
+val codel_at: t -> Geometry.Point.t -> Codel.t
 val to_string : t -> string
 val of_png: string -> t
-val get_codel_block: t -> Geometry.Point.t -> Geometry.Point.t list
+val next_codel: t -> Geometry.Direction.t -> Geometry.Hand.t -> Geometry.Point.t -> (bool * Geometry.Direction.t  * Geometry.Hand.t * int * Geometry.Point.t) option

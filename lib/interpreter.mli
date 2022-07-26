@@ -9,4 +9,3 @@ val codel_map_to_string: codel_map -> string
 *)
 
 
-val interpreter: Program.t -> unit

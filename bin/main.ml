@@ -51,4 +51,4 @@ let path = Sys.argv.(1);;
 let map = Program.of_png path;;
     (* Ocaml_piet.Program.codel_map_example  *)
 (* print_string (Program.codel_map_to_string map);*)
-let _ = main () in Interpreter.interpreter map;;
+let _ = main () in Machine.interpreter map;;
