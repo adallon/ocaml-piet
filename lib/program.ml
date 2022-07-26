@@ -7,28 +7,26 @@ module IOR =
     type t = int option 
   end)
 
-type t = CR.t * IOR.t * int ref * Hashmemory.t 
+type t = CR.t * IOR.t  (* int ref * Hashmemory.t *)
 
   (*
    * the codel rectangle represents the codel map
    * the int option rectangle represents the block numbers
    *     of the codels once it is set
-   * the int represents the current max block number
-   * the hashmemory is used to memorize block info to avoid costly
-   * computings.
-   * See hashmemory.ml
    *)
-let inside (m,_,_,_) = CR.inside m
-let codel_at (m,_,_,_) = CR.element_at m
-let group_at (_,g,_,_) = IOR.element_at g
+let inside (m,_) = CR.inside m
+let codel_at (m,_) = CR.element_at m
+let group_at (_,g) = IOR.element_at g
+(*
 let get_new_g (_,_,maxG,_) =
     let g = !maxG in let _ = maxG := !maxG+1 in g
-let set_group (_,gp,_,_) p g  =
+*)
+let set_group (_,gp) p g  =
   let _ = IOR.set gp p (Some g) in ()
 
-let sizeX (m,_,_,_) = CR.sizeX m
-let sizeY (m,_,_,_) = CR.sizeY m
-let undefined (_,g,_,_) p = (IOR.element_at g p = None)
+let sizeX (m,_) = CR.sizeX m
+let sizeY (m,_) = CR.sizeY m
+let undefined (_,g) p = (IOR.element_at g p = None)
 let choose f prog =
   let rec line res i = function
     | 0 -> res
@@ -44,15 +42,15 @@ let choose f prog =
 let create nx ny =
   let cmap =  CR.create Codel.Black nx ny in
   let gmap = IOR.create None        nx ny in
-  (cmap,gmap,ref 0,Hashmemory.create (nx*ny))
+  (cmap,gmap)
 
-let to_string codel_map =
-  let map0,_,_,_ = codel_map in
-  let indexesX = List.init (CR.sizeX map0) (fun i -> i) in 
-  let indexesY = List.init (CR.sizeY map0) (fun i -> i) in 
+let to_string prog =
+  let map,_ = prog in
+  let indexesX = List.init (CR.sizeX map) (fun i -> i) in 
+  let indexesY = List.init (CR.sizeY map) (fun i -> i) in 
   let get_line y = 
     let f x =
-      Codel.to_string (CR.element_at map0 (Point.to_point (x,y)))
+      Codel.to_string (CR.element_at map (Point.to_point (x,y)))
     in let l =
       List.map f indexesX 
     in String.concat "." l
@@ -67,7 +65,7 @@ let of_png fpath =
  in let file_as_str = read_file [] ich
  in let _ = close_in ich 
  in let img = ImagePNG.parsefile (ImageUtil.chunk_reader_of_string file_as_str)
- in let (map,group,maxG,tab) = create img.width img.height
+ in let (map,group) = create img.width img.height
  in let f x y r g b =
    let c = Codel.of_rgb r g b 
    in let _ = CR.set map (Point.to_point (x,y)) c 
@@ -75,11 +73,11 @@ let of_png fpath =
  in let g p _ = 
    let x,y = Point.x p, Point.y p in Image.read_rgb img x y (f x y) 
  in let _ = CR.iter g map
- in (map,group,maxG,tab)
+ in (map,group)
 
 let get_codel_block prog p =
   let _ = Util.print_endline 2 "    Computing color block" in
-  let (map,group,_,_) = prog in 
+  let (map,group) = prog in 
   let _ = assert(IOR.element_at group p = None) in
   let codel = CR.element_at map p in
 
@@ -116,6 +114,7 @@ let get_codel_block prog p =
     Util.print_endline 2 (String.concat ";" (List.map Point.to_string l));
   in l
 
+(*
 let get_corner prog g d h = 
   let (_,_,_,tab) = prog in 
   let (_,c) = Hashmemory.get_corner tab g d h
@@ -126,3 +125,4 @@ let get_group_size prog g =
 
 let add_group (_,_,_,tab) g codel_block size =
   Hashmemory.add_group tab g codel_block size
+  *)
