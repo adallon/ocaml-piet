@@ -13,7 +13,7 @@
 
 (license CeCILL-C www.cecill.info)
 
-(documentation "https://github.com/adallon/ocaml-piet")
+(documentation lib/)
 
 (package
  (name ocaml_piet)

@@ -74,7 +74,7 @@ module Stack : Stack_type =
   let add (x:t) =
     match x with
     | a::(b::t) -> (a+b)::t
-    | l -> l
+    | _ -> []
 
   (*
   let () =
@@ -88,7 +88,7 @@ module Stack : Stack_type =
   let subst (x:t) =  
     match x with
     | a::(b::t) -> (b-a)::t
-    | l -> l
+    | _ -> []
 
   (*
   let () =
@@ -101,7 +101,7 @@ module Stack : Stack_type =
   let mult (x:t) =  
     match x with
     | a::(b::t) -> (b*a)::t
-    | l -> l
+    | _ -> []
 
   (*
   let () =
@@ -113,9 +113,9 @@ module Stack : Stack_type =
 
   let div (x:t) =  
     match x with
-    | 0::t -> 0::t
+    | 0::(_::t) -> t
     | a::(b::t) -> (b/a)::t
-    | l -> l
+    | _ -> []
 
   (*
   let () =
@@ -127,13 +127,13 @@ module Stack : Stack_type =
 
   let modulo (x:t) =  
     match x with
-    | 0::t -> 0::t
+    | 0::(_::t) -> t
     | a::(b::t) ->
       let x = if a>0 
       then  (a+(b mod a))   mod a
       else  ((b mod a) - a) mod a
       in x::t
-    | l -> l
+    | _ -> []
 
   (*
   let () =
@@ -157,7 +157,7 @@ module Stack : Stack_type =
 
   let greater = function
     | a::(b::t) -> if b > a then 1::t else 0::t
-    | l -> l
+    | _ -> []
 
   (*
   let () =
@@ -212,8 +212,8 @@ module Stack : Stack_type =
         end
   
   let roll = function
-    | a::(b::t) -> if b > 0 then roll_aux a b t else a::(b::t)
-    | t -> t
+    | a::(b::t) -> if b > 0 then roll_aux a b t else t
+    | _ -> []
   
   (*
   let () =
