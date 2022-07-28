@@ -19,7 +19,7 @@
  (name ocaml_piet)
  (synopsis "Piet interpreter")
  (description "OCaml piet esoteric programming language implementation")
- (depends ocaml dune)
+ (depends ocaml dune imagelib)
  (tags
   (topics piet ocaml)))
 
