@@ -1,3 +1,9 @@
+(**
+ * This module provides the function that computes the next point 
+ * that should be reached by the explorer and other relevant information
+ *
+ *)
+
 module Result : sig
   type t
   val seen_white: t -> bool

@@ -7,6 +7,7 @@ noerror:
 
 clean:
 	rm -rf _build/
+	rm -f ocaml-piet.exe
 
 test:   _build/default/bin/main.exe
 	_build/default/bin/main.exe examples/Piet_hello.png

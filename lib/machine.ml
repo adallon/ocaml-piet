@@ -8,6 +8,11 @@ open Geometry
  * The complete machine is below.
  *)
 
+(**
+ * This module provides types and function for the main stack machine
+ * It also contains the interpreter
+ *)
+
 
 module type Stack_type = sig
   type t

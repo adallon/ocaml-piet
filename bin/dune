@@ -2,3 +2,5 @@
  (public_name ocaml_piet)
  (name main)
  (libraries ocaml_piet))
+
+(documentation)

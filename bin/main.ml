@@ -3,31 +3,68 @@ open Ocaml_piet
 (*
 let path = "/home/antoine/dépôts/perso/ocaml-piet/examples/alpha_filled.png"
 *)
-let version = "ocaml-piet version 0"
 
+(** Version number *)
+let version = "ocaml-piet version 0.1"
+
+(** exception allowing to end the execution of the main function *)
 exception End
+
+(** configuration representing the option passed as parameters of the executable 
+ * @option steps activates the interactive step-by-step mode
+   * The step by step mode is at least at verbosity level
+ * @option verbosity represents the verbosity level:
+   * 0 prints nothing
+   * 1 prints the execution trace
+   * above levels print more informations
+ * @option filename is the filename of the file
+ *)
 
 type config = 
   {mutable steps: bool; 
   mutable verbosity: int;
   mutable filename: string option}
 
+(**
+ * init_config is the default configuration: 
+   * non interactive
+   * not verbose
+ *)
 let init_config = {steps = false ; verbosity = 0; filename = None}
+
+(**
+ * activates the trace output
+ *)
 let trace config () = 
     if (config.verbosity = 0)
     then config.verbosity <- 1
     else ()
+
+(**
+ * activates the debugging information
+ *)
 let debug config () = 
     if (config.verbosity < 2)
     then config.verbosity <- 2
     else ()
+
+(**
+ * activates the maximal verbosity
+ *)
 let verbose config () =  config.verbosity <- 1000 (* max verbosity *)
+
+(**
+ * activates the step by step mode
+ *)
 let interactive config () = 
   let _ =
     config.steps <- true;
   in ()
 
-
+(**
+ * option handler
+ * options have been described above
+ *)
 let main () = 
   let argument_reader config =
     let spec_list =
@@ -47,8 +84,24 @@ let main () =
     Util.set_steps config.steps
   in ()
 
-let path = Sys.argv.(1);;
-let map = Program.of_png path;;
+  (**
+   * file should be the first argument
+   *)
+  (**
+   * computes the program from the image
+   *)
     (* Ocaml_piet.Program.codel_map_example  *)
 (* print_string (Program.codel_map_to_string map);*)
-let _ = main () in Machine.interpreter map;;
+
+(**
+  * Finds the path, defines the program, handles the options and launches the interpreter
+  *)
+let _ =
+ try 
+  let path = 
+    try Sys.argv.(1) with
+    | _ -> print_endline "Please enter a filename with an image describing a piet program"; raise End
+  in let prog = Program.of_png path
+  in let _ = main () in Machine.interpreter prog
+  with
+  | End -> ()

@@ -36,7 +36,7 @@ let choose f prog =
 
 
 let create nx ny =
-  let cmap =  CR.create Codel.Black nx ny in
+  let cmap =  CR.create Codel.black nx ny in
   let gmap = IOR.create None        nx ny in
   (cmap,gmap)
 

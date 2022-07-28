@@ -11,15 +11,16 @@
 
 (maintainers "A. Dallon")
 
-(license Copyright AD)
+(license CeCILL-C www.cecill.info)
 
-(documentation https://github.com/adallon/ocaml-piet)
+(documentation "https://github.com/adallon/ocaml-piet")
 
 (package
  (name ocaml_piet)
  (synopsis "Piet interpreter")
  (description "OCaml piet esoteric programming language implementation")
- (depends ocaml dune imagelib)
+ (depends ocaml dune imagelib odoc)
+ (documentation "https://github.com/adallon/ocaml-piet")
  (tags
   (topics piet ocaml)))
 

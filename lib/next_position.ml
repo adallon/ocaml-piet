@@ -69,15 +69,15 @@ let get_possibility mem cur_p (d,h) =
   in let prog = Memory.get_prog mem
   in let c,g_op = 
     (Program.codel_at prog cur_p), (Program.group_at prog cur_p)
-  in match c, g_op  with
-  | Codel.White,Some(_) ->
+  in match Codel.is_white c, g_op  with
+  | true,Some(_) ->
     let _ =
       Util.print_endline 1 "  We are at a white codel";
       Util.print_endline 1 "    (Seen before)";
     in let wh,next_p = 
       get_next_coord mem true d (Direction.next_point cur_p d)
     in (wh,0,next_p)
-  | Codel.White,None ->
+  | true,None ->
     let _ =
       Util.print_endline 1 "  We are at a white codel";
       Util.print_endline 1 "    (Not seen yet)";
@@ -91,8 +91,8 @@ let get_possibility mem cur_p (d,h) =
     (* in let _ = Hashtbl.add tab (gVal,d,h) (wh,0,next_p) *)
     in (wh,0,next_p)
     (* = Hashtbl.find tab (g,d,h) *)
-  |Codel.Black,_ -> assert(false) (* we cannot be at a black codel *)
-  | _,Some(g) ->      
+  | false,Some(g) ->
+    assert(not(Codel.is_black c));
     let _ =
         Util.print_endline 1 "  We are at a color codel";
         Util.print_endline 1 "    (Color block seen before)";
@@ -100,28 +100,29 @@ let get_possibility mem cur_p (d,h) =
     in let wh,next_p = 
       get_next_coord mem false d (Direction.next_point corner d)
       in (wh,size,next_p)
-  | _,None ->
-      let _ =
-        Util.print_endline 1 "  We are at a color codel";
-        Util.print_endline 1 "    (Color block not seen yet)";
-      in
-      let color_block = Program.get_codel_block prog cur_p in
-      let blocksize = List.length color_block in
-      let gVal = Memory.get_new_g mem in
-      let _ =
-        let rec aux = function
-          | [] -> ()
-          | p::t ->
-              begin Program.set_group (Memory.get_prog mem) p gVal; aux t end
+  | false,None ->
+    assert(not(Codel.is_black c));
+    let _ =
+      Util.print_endline 1 "  We are at a color codel";
+      Util.print_endline 1 "    (Color block not seen yet)";
+    in
+    let color_block = Program.get_codel_block prog cur_p in
+    let blocksize = List.length color_block in
+    let gVal = Memory.get_new_g mem in
+    let _ =
+      let rec aux = function
+        | [] -> ()
+        | p::t ->
+            begin Program.set_group (Memory.get_prog mem) p gVal; aux t end
 
-        in aux color_block
-      in 
-      let _ = Memory.add_group mem gVal color_block blocksize in
-      let size,corner = Memory.get_corner mem gVal d h in
-      let _ = assert(size = blocksize) in
-      let (wh,next_p) = 
-        get_next_coord mem false d (Direction.next_point corner d)
-      in (wh,size,next_p)
+      in aux color_block
+    in 
+    let _ = Memory.add_group mem gVal color_block blocksize in
+    let size,corner = Memory.get_corner mem gVal d h in
+    let _ = assert(size = blocksize) in
+    let (wh,next_p) = 
+      get_next_coord mem false d (Direction.next_point corner d)
+    in (wh,size,next_p)
 
 
 let rec find_direction mem cur_p = function

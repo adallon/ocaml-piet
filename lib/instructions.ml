@@ -1,3 +1,6 @@
+(**
+ * Main type of the module, containing the instructions
+ *)
 type t = 
   | NoInst    | Push      | Pop (* basic stack *)   
   | Add       | Substract | Multiply | Divide    | Mod (* Basic arithmetic *)
@@ -7,6 +10,12 @@ type t =
   | InInt     | InChar  (* io : input  *)  
   | OutInt    | OutChar (* io : output *)
 
+(**
+ * Function transforming a pair of ints describing 
+ * the distance between the lightness and hue 
+ * to an instruction according to the rules of the language
+ * @param t pair of ints describing the distance between lightness and hue
+ *)
 let to_instr t =
   match t with
   | (0,0) -> NoInst
@@ -35,6 +44,12 @@ let to_instr t =
 
   | _ -> assert(false) (* should never occur *)
 
+(**
+ * Computation of the instruction from the codels
+ * @param wh boolean telling whether a white codel has been seen or not
+ * @param c0 origin codel
+ * @param c1 destination codel
+ *)
 let transition wh c0 c1 = 
   if wh 
   then
