@@ -7,6 +7,8 @@ The interpreter provides the option to be run in an interactive mode,
 which can be helpful to debug a Piet program.
 See options with --help
 
+For now, this tool only interpretes png files.
+
 ## Installation
 It is recommended to install the dependencies through opam with the following command:
 ```
@@ -27,6 +29,7 @@ $ ./ocaml-piet --version
 ## Run
 
 To run the tool on the Piet-hello.png file:
+
 ```
 $ ./ocaml-piet example/Piet-hello.png
 ```
