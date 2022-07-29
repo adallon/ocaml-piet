@@ -1,5 +1,6 @@
 (library
  (name ocaml_piet)
- (libraries imagelib.unix))
+ (libraries imagelib.unix)
+ (public_name ocaml_piet))
 
 (documentation)
