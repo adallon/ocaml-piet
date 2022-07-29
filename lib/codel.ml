@@ -54,7 +54,7 @@ module Hue =
 
     (** Distance between two hues.
      * Must be a nonnegative number *) 
-    let diff a b = (to_int b - to_int a + 3) mod 3
+    let diff a b = (to_int b - to_int a + 6) mod 6
   end
 
 

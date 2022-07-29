@@ -50,6 +50,13 @@ module Hand : sig
   val switch : t -> t
 end
 
+(**
+   This module defines the functions associated to the directions,
+   that is the possible values of the direction pointer.
+   Their main purpose is to represent directions,
+   to advance and to find edges and corners 
+   in some direction.
+ *)
 module Direction : sig
 
   (** The type describes the possible values of the direction pointer DP

@@ -1,6 +1,6 @@
 all:
 	dune build 
-	cp _build/default/bin/main.exe ocaml-piet.exe
+	cp -f _build/default/bin/main.exe ocaml-piet.exe
 
 noerror:
 	dune build --profile release

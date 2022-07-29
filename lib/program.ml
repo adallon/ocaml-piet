@@ -18,7 +18,8 @@ let inside (m,_) = CR.inside m
 let codel_at (m,_) = CR.element_at m
 let group_at (_,g) = IOR.element_at g
 let set_group (_,gp) p g  =
-  let _ = IOR.set gp p (Some g) in ()
+  let _ = assert(IOR.element_at gp p = None ); 
+  IOR.set gp p (Some g) in ()
 
 let sizeX (m,_) = CR.sizeX m
 let sizeY (m,_) = CR.sizeY m

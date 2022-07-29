@@ -1,6 +1,5 @@
 (**
-   Module describing utilitary functions
-  
+   Module describing utilitary functions 
  *)
 
 
@@ -16,35 +15,23 @@ val set_steps : bool -> unit
  *)
 val get_step_by_step : unit -> bool
 
-(**
-   Function allowing to set the verbosity level
- *)
+(** Function allowing to set the verbosity level *)
 val set_verb_level : int -> unit
 
-(**
-   Function printing strings depending on verbosity level
- *)
+(** Function printing strings depending on verbosity level *)
 val print_string: int -> string -> unit
 
-(**
-   Function printing ints depending on verbosity level
- *)
+(** Function printing ints depending on verbosity level *)
 val print_int: int -> int -> unit
 
-(**
-   Function like Stdlib.print_endline, but with verbosity level
- *)
+(** Function like Stdlib.print_endline, but with verbosity level *)
 val print_endline: int -> string -> unit
 
-(**
-   Function like Stdlib.print_newline, but with verbosity level
- *)
+(** Function like Stdlib.print_newline, but with verbosity level *)
 val print_newline: int -> unit -> unit
 
 
-(**
-   Module with just a type
- *)
+(** Module with just a type *)
 module type Basic = sig
   type t
 end
