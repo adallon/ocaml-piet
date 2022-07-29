@@ -1,6 +1,6 @@
 (**
- * This module provides a data structure used to avoid costly recomputation
- * It also provides related function allowing to retrieve corners at no cost when possible
+   This module provides a data structure used to avoid costly recomputation
+   It also provides related function allowing to retrieve corners at no cost when possible
  *)
 
 

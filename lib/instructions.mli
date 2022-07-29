@@ -1,13 +1,13 @@
 (**
- * This module provides the list of instruction as its main type.
- * It also provides a transition function that computes
- * the instruction from codels
- *
+   This module provides the list of instruction as its main type.
+   It also provides a transition function that computes
+   the instruction from codels
+  
  *)
 
 
 (**
- * Main type of the module, containing the instructions
+   Main type of the module, containing the instructions
  *)
 type t = 
   | NoInst    | Push      | Pop (* basic stack *)   
@@ -20,7 +20,7 @@ type t =
 
 
 (**
- * Computation of the instruction from the codels
- *
+   Computation of the instruction from the codels
+  
  *)
 val transition : bool -> Codel.t -> Codel.t -> t

@@ -1,6 +1,6 @@
 (**
- * This module provides types and function for the main stack machine
- * It also contains the interpreter
+   This module provides types and function for the main stack machine
+   It also contains the interpreter
  *)
 
 type t

@@ -1,7 +1,7 @@
 (** 
- * This module provides the description of the program itself.
- * It also provides the basic functions allowing to reason about it.
- * *)
+   This module provides the description of the program itself.
+   It also provides the basic functions allowing to reason about it.
+   *)
 
 type t 
 
