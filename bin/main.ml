@@ -59,6 +59,7 @@ let verbose config () =  config.verbosity <- 1000 (* max verbosity *)
 let interactive config () = 
   let _ =
     config.steps <- true;
+    if config.verbosity = 0 then config.verbosity <- 1 else ()
   in ()
 
 (**
@@ -76,13 +77,17 @@ let main () =
       ("--version", Arg.Unit (fun () -> print_string version ; raise End ), "Print version number" );
       ]
     in let usage_message = "./ocaml-piet.exe file [options]"
-    in Arg.parse spec_list print_endline usage_message ;
+    in let read_file filename = 
+      begin
+        config.filename <- Some(filename)
+      end
+    in Arg.parse spec_list read_file usage_message ;
     config
   in let config = argument_reader init_config
   in let _ =
     Util.set_verb_level config.verbosity ;
     Util.set_steps config.steps
-  in ()
+  in config.filename
 
   (**
    * file should be the first argument
@@ -97,11 +102,10 @@ let main () =
   * Finds the path, defines the program, handles the options and launches the interpreter
   *)
 let _ =
- try 
-  let path = 
-    try Sys.argv.(1) with
-    | _ -> print_endline "Please enter a filename with an image describing a piet program"; raise End
-  in let prog = Program.of_png path
-  in let _ = main () in Machine.interpreter prog
+  try
+  match main () with
+  | None -> print_endline "Please enter a filename with an image describing a piet program"
+  | Some(path) -> 
+      let prog = Program.of_png path in Machine.interpreter prog
   with
   | End -> ()
